@@ -1,0 +1,5 @@
+
+// Restricted Ledger Access
+Route::middleware(['auth', 'role:admin|manager|accounts'])->prefix('admin')->as('admin.')->group(function () {
+    Route::get('customers/{customer}/ledger', [\App\Http\Controllers\Admin\CustomerController::class, 'ledger'])->name('customers.ledger');
+});

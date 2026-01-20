@@ -1,0 +1,117 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        // 1. Chart of Accounts
+        Schema::create('chart_of_accounts', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('code')->unique(); // e.g., 101000
+            $table->string('name'); // e.g., "Bank"
+            
+            // Type determines where it sits in reports
+            // receivable, payable: used for partners
+            // liquidity: bank/cash
+            // income, expense: P&L
+            // asset, liability, equity: Balance Sheet
+            $table->enum('type', [
+                'receivable', 'payable', 
+                'liquidity', // Bank/Cash
+                'current_asset', 'non_current_asset',
+                'prepayment', 
+                'fixed_asset',
+                'current_liability', 'non_current_liability',
+                'equity',
+                'income', 'other_income',
+                'expense', 'depreciation', 'cost_of_revenue'
+            ]);
+            
+            $table->boolean('allows_reconciliation')->default(false); // Can items be matched?
+            $table->text('description')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        // 2. Accounting Journals
+        Schema::create('accounting_journals', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('name'); // e.g. "Customer Invoices"
+            $table->string('code', 10); // e.g. "INV" (used for numbering)
+            $table->enum('type', ['sale', 'purchase', 'cash', 'bank', 'general']);
+            
+            // Default accounts for this journal
+            $table->foreignUuid('default_account_id')->nullable()->constrained('chart_of_accounts');
+            // For Bank journals, link to a Bank Account number? (Optional for now)
+            
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        // 3. Journal Entries (Header)
+        Schema::create('journal_entries', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->date('date');
+            $table->foreignUuid('journal_id')->constrained('accounting_journals');
+            
+            $table->string('name'); // e.g. INV/2024/0001
+            $table->string('reference')->nullable(); // External Reference, e.g. Vendor Invoice #
+            
+            $table->enum('state', ['draft', 'posted', 'cancelled'])->default('draft');
+            
+            // Polymorphic link to source document (Invoice, Payment, Expense, etc.)
+            $table->uuid('entity_id')->nullable();
+            $table->string('entity_type')->nullable(); // e.g. App\Models\Invoice
+            
+            $table->timestamps();
+            $table->softDeletes();
+            
+            // Uniqueness on name per journal? Or global?
+            // Usually global unique sequence
+            $table->unique(['name']); 
+        });
+
+        // 4. Journal Items (Lines)
+        Schema::create('journal_items', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->foreignUuid('journal_entry_id')->constrained('journal_entries')->onDelete('cascade');
+            
+            $table->foreignUuid('account_id')->constrained('chart_of_accounts');
+            $table->foreignUuid('partner_id')->nullable()->constrained('users'); // Link to User (Customer/Vendor)
+            
+            $table->string('name')->nullable(); // Description of line
+            
+            $table->decimal('debit', 20, 2)->default(0);
+            $table->decimal('credit', 20, 2)->default(0);
+            
+            $table->date('date'); // Denormalized for easier reporting queries
+            
+            // Reconciliation (Future phase)
+            // $table->foreignUuid('full_reconcile_id')->nullable();
+            
+            $table->timestamps();
+            $table->softDeletes();
+            
+            $table->index(['account_id', 'date']);
+            $table->index('partner_id');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('journal_items');
+        Schema::dropIfExists('journal_entries');
+        Schema::dropIfExists('accounting_journals');
+        Schema::dropIfExists('chart_of_accounts');
+    }
+};
