@@ -9,10 +9,13 @@ class Setting extends Model
 {
     protected $fillable = ['key', 'value', 'group', 'type'];
 
-    // Clear cache on save/update
+    // Clear cache on save/update/delete
     protected static function booted()
     {
         static::saved(function () {
+            Cache::forget('app_settings');
+        });
+        static::deleted(function () {
             Cache::forget('app_settings');
         });
     }

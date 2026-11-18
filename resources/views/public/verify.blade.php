@@ -34,7 +34,7 @@
                 </div>
                 <div class="flex justify-between border-b pb-2">
                     <span class="text-gray-500 dark:text-gray-400">Type:</span>
-                    <span class="font-bold">{{ $certificate->type->name }}</span>
+                    <span class="font-bold">{{ $certificate->type->name ?? 'Certificate' }}</span>
                 </div>
                 <div class="flex justify-between border-b pb-2">
                     <span class="text-gray-500 dark:text-gray-400">Vessel:</span>
@@ -42,7 +42,7 @@
                 </div>
                 <div class="flex justify-between border-b pb-2">
                     <span class="text-gray-500 dark:text-gray-400">Expiry Date:</span>
-                    <span class="font-bold {{ $isExpired ? 'text-red-600' : '' }}">{{ $certificate->expiry_date->format('d M Y') }}</span>
+                    <span class="font-bold {{ $isExpired ? 'text-red-600' : '' }}">{{ $certificate->expiry_date ? $certificate->expiry_date->format('d M Y') : 'N/A' }}</span>
                 </div>
             </div>
 

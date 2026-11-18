@@ -316,7 +316,7 @@
                          <div class="flex justify-between mt-6">
                             <button type="button" @click="activeTab = 'documents'" class="text-gray-600 underline">&larr; Back</button>
                             <div class="space-x-3">
-                                <a href="{{ route('admin.users.index') }}" class="bg-gray-50 dark:bg-gray-7000 hover:bg-gray-600 text-white px-4 py-2 rounded">Cancel</a>
+                                <a href="{{ route('admin.users.index') }}" class="bg-gray-50 dark:bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded">Cancel</a>
                                 <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-bold shadow-lg">Update Employee</button>
                             </div>
                         </div>

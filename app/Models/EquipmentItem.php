@@ -99,11 +99,20 @@ class EquipmentItem extends Model
 
     public function getAttribute($key)
     {
-        // Allow accessing dynamic attributes directly
-        $value = parent::getAttribute($key);
+        try {
+            $value = parent::getAttribute($key);
+        } catch (\Illuminate\Database\Eloquent\MissingAttributeException $e) {
+            return null;
+        }
         
-        if ($value === null && $this->attributes && isset($this->attributes[$key])) {
-            return $this->attributes[$key];
+        if ($value === null) {
+            $rawAttributes = $this->attributes['attributes'] ?? null;
+            if (is_string($rawAttributes)) {
+                $rawAttributes = json_decode($rawAttributes, true);
+            }
+            if (is_array($rawAttributes) && isset($rawAttributes[$key])) {
+                return $rawAttributes[$key];
+            }
         }
         
         return $value;

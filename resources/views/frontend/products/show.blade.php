@@ -32,10 +32,10 @@
                 <div class="hidden mt-6 w-full max-w-2xl mx-auto sm:block lg:max-w-none">
                     <div class="grid grid-cols-4 gap-6" x-data>
                         @foreach($images as $image)
-                            <button @click="$dispatch('change-image', '{{ Storage::url($image) }}')" class="relative h-24 bg-white dark:bg-gray-800 rounded-md flex items-center justify-center text-sm font-medium uppercase text-gray-900 dark:text-gray-100 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700 focus:outline-none focus:ring focus:ring-offset-4 focus:ring-opacity-50 border border-gray-200">
+                            <button @click="$dispatch('change-image', '{{ url('storage/' . $image) }}')" class="relative h-24 bg-white dark:bg-gray-800 rounded-md flex items-center justify-center text-sm font-medium uppercase text-gray-900 dark:text-gray-100 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700 focus:outline-none focus:ring focus:ring-offset-4 focus:ring-opacity-50 border border-gray-200">
                                 <span class="sr-only">Image {{ $loop->iteration }}</span>
                                 <span class="absolute inset-0 rounded-md overflow-hidden">
-                                    <img src="{{ Storage::url($image) }}" alt="" class="w-full h-full object-center object-contain">
+                                    <img src="{{ url('storage/' . $image) }}" alt="" class="w-full h-full object-center object-contain">
                                 </span>
                             </button>
                         @endforeach
@@ -44,7 +44,7 @@
                 @endif
 
                 <!-- Main Image -->
-                <div class="w-full aspect-w-1 aspect-h-1 rounded-lg overflow-hidden sm:aspect-w-2 sm:aspect-h-3" x-data="{ mainSrc: '{{ $product->image_path ? Storage::url($product->image_path) : '' }}' }" @change-image.window="mainSrc = $event.detail">
+                <div class="w-full aspect-w-1 aspect-h-1 rounded-lg overflow-hidden sm:aspect-w-2 sm:aspect-h-3" x-data="{ mainSrc: '{{ $product->image_path ? url('storage/' . $product->image_path) : '' }}' }" @change-image.window="mainSrc = $event.detail">
                     @if($product->image_path)
                         <img :src="mainSrc" alt="{{ $product->name }}" class="w-full h-[500px] object-center object-contain bg-white dark:bg-gray-800 shadow-lg rounded-lg border border-gray-100">
                     @else
@@ -161,7 +161,7 @@
                         <div class="group relative bg-white dark:bg-gray-800 border border-gray-100 rounded-lg overflow-hidden hover:shadow-lg transition">
                             <div class="aspect-w-1 aspect-h-1 w-full overflow-hidden bg-gray-100 h-48">
                                 @if($related->image_path)
-                                    <img src="{{ Storage::url($related->image_path) }}" alt="{{ $related->name }}" class="object-cover object-center group-hover:opacity-75 h-full w-full">
+                                    <img src="{{ url('storage/' . $related->image_path) }}" alt="{{ $related->name }}" class="object-cover object-center group-hover:opacity-75 h-full w-full">
                                 @else
                                      <div class="w-full h-full flex items-center justify-center text-gray-400">
                                         <svg class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>

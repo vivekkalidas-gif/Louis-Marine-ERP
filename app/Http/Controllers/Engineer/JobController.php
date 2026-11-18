@@ -12,21 +12,44 @@ class JobController extends Controller
 {
     public function __construct()
     {
-        // Authorize resource actions using ServiceJobPolicy
         $this->authorizeResource(ServiceJob::class, 'job');
     }
 
     public function index(Request $request)
     {
-        // Show all jobs for engineers (they can view all)
-        $query = ServiceJob::with(['customer', 'vessel', 'engineer'])
-                    ->orderBy('created_at', 'desc');
+        $query = ServiceJob::with([
+                'customer:id,company_name,email', 
+                'vessel:id,name,imo_number', 
+                'engineer:id,name'
+            ])
+            ->orderBy('created_at', 'desc');
 
         if ($request->has('status') && !empty($request->status)) {
-            $query->where('status', $request->status);
+            if ($request->status === 'today') {
+                $query->whereDate('scheduled_at', now()->startOfDay());
+            } elseif ($request->status === 'overdue') {
+                $query->where('scheduled_at', '<', now()->startOfDay())
+                      ->whereNotIn('status', ['completed', 'cancelled']);
+            } else {
+                $query->where('status', $request->status);
+            }
         }
 
-        $jobs = $query->paginate(10);
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('job_number', 'like', "%{$search}%")
+                  ->orWhere('title', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function($cq) use ($search) {
+                      $cq->where('company_name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('vessel', function($vq) use ($search) {
+                      $vq->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $jobs = $query->paginate(15);
                     
         return view('engineer.jobs.index', compact('jobs'));
     }
@@ -34,22 +57,21 @@ class JobController extends Controller
     public function show(ServiceJob $job)
     {
         $job->load([
-            'customer', 
-            'vessel', 
-            'assignments.user.roles',  // Eager load roles to prevent lazy loading
+            'customer:id,company_name,email,phone,city,country', 
+            'vessel:id,name,imo_number,type,flag', 
+            'assignments.user.roles',
             'materials', 
             'documents', 
             'requestedBy', 
             'activeReport',
-            'items', // Job Items (Delivery Note)
-            'equipment.equipmentItem' // Job Equipment (Master Data)
+            'items',
+            'equipment.equipmentItem'
         ]);
         return view('engineer.jobs.show', compact('job'));
     }
 
     public function deliveryNote(ServiceJob $job)
     {
-        // Only allow delivery note for Workshop Service jobs
         if ($job->job_type !== 'Workshop Service') {
             abort(404, 'Delivery note only available for Workshop Service jobs');
         }
@@ -58,23 +80,47 @@ class JobController extends Controller
         return view('engineer.jobs.delivery-note', compact('job'));
     }
 
+    public function pdf(ServiceJob $job, Request $request)
+    {
+        $job->load([
+            'customer', 
+            'vessel', 
+            'engineer', 
+            'assignments.user', 
+            'requestedBy', 
+            'equipment.equipmentItem', 
+            'materials'
+        ]);
+        
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('engineer.jobs.pdf', compact('job'));
+        $filename = 'Job-Order-' . str_replace(['/', '\\', ' '], '-', $job->job_number) . '.pdf';
+        
+        if ($request->has('download')) {
+            return $pdf->download($filename);
+        }
+
+        return $pdf->stream($filename);
+    }
+
     public function create()
     {
-        $customers = Customer::all();
-        $vessels = Vessel::where('status', 'active')->get();
-        $contacts = \App\Models\CustomerContact::all();
+        // Lightweight column selects for fast form rendering
+        $customers = Customer::select(['id', 'company_name', 'email'])->orderBy('company_name')->get();
+        $vessels = Vessel::select(['id', 'name', 'customer_id', 'imo_number'])->where('status', 'active')->orderBy('name')->get();
+        $contacts = \App\Models\CustomerContact::select(['id', 'customer_id', 'name', 'email', 'phone'])->get();
         
-        $engineers = \App\Models\User::whereHas('roles', function($q) {
-            $q->where('slug', 'engineer');
-        })->get();
+        $engineers = \App\Models\User::select(['id', 'name', 'email'])
+            ->whereHas('roles', function($q) {
+                $q->where('slug', 'engineer');
+            })->get();
 
-        $technicians = \App\Models\User::whereHas('roles', function($q) {
-            $q->whereIn('slug', ['technician', 'engineer']);
-        })->get();
+        $technicians = \App\Models\User::select(['id', 'name', 'email'])
+            ->whereHas('roles', function($q) {
+                $q->whereIn('slug', ['technician', 'engineer']);
+            })->get();
 
-        // Use Equipment Master instead of Scope Categories
         $equipmentCategories = \App\Models\EquipmentCategory::with(['items' => function($q) {
-            $q->where('is_active', true);
+            $q->select(['id', 'category_id', 'name', 'code', 'brand', 'model'])->where('is_active', true);
         }])->where('is_active', true)->ordered()->get();
 
         return view('engineer.jobs.create', compact('customers', 'vessels', 'engineers', 'technicians', 'contacts', 'equipmentCategories'));
@@ -105,20 +151,17 @@ class JobController extends Controller
             'equipment.*.equipment_item_id' => 'sometimes|exists:equipment_items,id',
             'equipment.*.quantity' => 'sometimes|integer|min:1',
             'attachments.*' => 'nullable|file|max:10240',
-            // Delivery Note fields (required for Workshop Service)
             'delivered_by' => 'required_if:job_type,Workshop Service',
             'delivery_contact_person' => 'required_if:job_type,Workshop Service',
             'delivery_contact_number' => 'required_if:job_type,Workshop Service',
             'delivery_notes' => 'nullable',
         ]);
 
-        // Generate Job Number
         $year = date('Y');
         $lastJob = ServiceJob::where('job_number', 'like', "JOB-$year-%")->orderBy('id', 'desc')->first();
         $sequence = $lastJob ? intval(substr($lastJob->job_number, -4)) + 1 : 1;
         $jobNumber = "JOB-$year-" . str_pad($sequence, 4, '0', STR_PAD_LEFT);
 
-        // Generate Delivery Note Number for Workshop Service
         $deliveryNoteNumber = null;
         if ($validated['job_type'] === 'Workshop Service') {
             $lastDN = ServiceJob::where('delivery_note_number', 'like', "DN-$year-%")
@@ -127,7 +170,6 @@ class JobController extends Controller
             $deliveryNoteNumber = "DN-$year-" . str_pad($dnSequence, 4, '0', STR_PAD_LEFT);
         }
 
-        // Generate title if not provided
         $title = $validated['title'] ?? 
                  ($validated['service_category'] ?? 'Service') . ' - ' . 
                  ($request->service_types[0] ?? 'Job');
@@ -143,7 +185,7 @@ class JobController extends Controller
             'job_type' => $validated['job_type'],
             'job_source' => $validated['job_source'],
             'scheduled_at' => $validated['scheduled_at'],
-            'scheduled_start' => $validated['scheduled_at'], // Sync for now
+            'scheduled_start' => $validated['scheduled_at'],
             'service_category' => $validated['service_category'] ?? null,
             'service_types' => $validated['service_types'] ?? [],
             'scope_of_work' => $validated['scope_of_work'] ?? null,
@@ -152,7 +194,6 @@ class JobController extends Controller
             'reference_no' => $validated['reference_no'],
             'assigned_engineer_id' => $validated['assigned_engineer_id'] ?? auth()->id(),
             'created_by' => auth()->id(),
-            // Delivery Note fields (for Workshop Service)
             'delivery_note_number' => $deliveryNoteNumber,
             'delivered_by' => $validated['delivered_by'] ?? null,
             'delivery_contact_person' => $validated['delivery_contact_person'] ?? null,
@@ -161,7 +202,6 @@ class JobController extends Controller
             'delivery_received_at' => ($validated['job_type'] === 'Workshop Service') ? now() : null,
         ]);
 
-        // Assign Technicians
         if (!empty($request->technicians)) {
             foreach ($request->technicians as $techId) {
                 \App\Models\JobAssignment::create([
@@ -174,7 +214,6 @@ class JobController extends Controller
             }
         }
 
-        // Material Requests
         if (!empty($request->materials)) {
             foreach ($request->materials as $mat) {
                 if (!empty($mat['name'])) {
@@ -189,7 +228,6 @@ class JobController extends Controller
             }
         }
 
-        // Equipment Items (replaces Scope Items)
         if (!empty($request->equipment)) {
             foreach ($request->equipment as $equip) {
                 \App\Models\JobEquipment::create([
@@ -201,7 +239,6 @@ class JobController extends Controller
             }
         }
 
-        // Attachments
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $file) {
                 $path = $file->store('job-documents', 'public');

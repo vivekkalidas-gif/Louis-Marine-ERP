@@ -138,7 +138,7 @@
                 popup: 'dark:bg-gray-800 dark:text-gray-100',
                 input: 'dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600',
                 confirmButton: 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded',
-                cancelButton: 'bg-gray-50 dark:bg-gray-7000 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded ml-2'
+                cancelButton: 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded ml-2'
             },
             preConfirm: (name) => {
                 if (!name) {

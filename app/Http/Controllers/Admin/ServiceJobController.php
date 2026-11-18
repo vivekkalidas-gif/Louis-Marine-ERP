@@ -37,9 +37,12 @@ class ServiceJobController extends Controller
     public function create()
     {
         $customers = Customer::where('status', 'Active')->orderBy('company_name')->get();
+        // Eager load vessels with their customers to prevent lazy loading violation
+        $vessels = Vessel::with('customer')->orderBy('name')->get();
+
         // Load Engineers (assuming role 'engineer' exists)
         $engineers = User::whereHas('roles', function($q){ $q->where('name', 'engineer'); })->get();
-        return view('admin.jobs.create', compact('customers', 'engineers'));
+        return view('admin.jobs.create', compact('customers', 'engineers', 'vessels'));
     }
 
     public function store(Request $request)
@@ -76,6 +79,28 @@ class ServiceJobController extends Controller
         $job->load(['vessel', 'engineer', 'documents', 'notes.author', 'items', 'equipment.equipmentItem']);
         $engineers = User::whereHas('roles', function($q){ $q->where('slug', 'engineer'); })->get();
         return view('admin.jobs.show', compact('job', 'engineers'));
+    }
+
+    public function pdf(ServiceJob $job, Request $request)
+    {
+        $job->load([
+            'customer', 
+            'vessel', 
+            'engineer', 
+            'assignments.user', 
+            'requestedBy', 
+            'equipment.equipmentItem', 
+            'materials'
+        ]);
+        
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('engineer.jobs.pdf', compact('job'));
+        $filename = 'Job-Order-' . str_replace(['/', '\\', ' '], '-', $job->job_number) . '.pdf';
+        
+        if ($request->has('download')) {
+            return $pdf->download($filename);
+        }
+
+        return $pdf->stream($filename);
     }
 
 

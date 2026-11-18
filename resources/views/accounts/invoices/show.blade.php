@@ -8,7 +8,7 @@
                 @if($invoice->serviceJob)
                      <span class="text-xs text-gray-500 dark:text-gray-400 mr-2">Job: {{ $invoice->serviceJob->job_number }}</span>
                 @endif
-                <a href="{{ route('accounts.invoices.pdf', $invoice) }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-7000">
+                <a href="{{ route('accounts.invoices.pdf', $invoice) }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700">
                     Download PDF
                 </a>
                 @if($invoice->balance > 0 && $invoice->status !== 'draft')

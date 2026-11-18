@@ -1,111 +1,140 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="theme-text-header">
-                {{ __('Customer Management') }}
-            </h2>
-            <div class="flex gap-2" x-data>
-                <a href="{{ route('admin.customers.export') }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow-sm flex items-center gap-2" title="Export to CSV">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3 3m0 0l-3-3m3 3V8"></path>
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h2 class="font-black text-xl text-slate-900 dark:text-white leading-tight tracking-tight flex items-center gap-2">
+                    <svg class="w-6 h-6 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    <span>Customer Directory</span>
+                </h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Manage customer accounts, vessel associations, and contact details</p>
+            </div>
+            <div class="flex items-center gap-2" x-data>
+                <a href="{{ route('admin.customers.export') }}" class="btn-secondary text-xs font-bold gap-1.5 shadow-sm" title="Export to CSV">
+                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
-                    <span>Export</span>
+                    <span>Export CSV</span>
                 </a>
                 
-                <button @click="$dispatch('open-import-modal')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-sm flex items-center gap-2" title="Import from CSV">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                <button @click="$dispatch('open-import-modal')" class="btn-secondary text-xs font-bold gap-1.5 shadow-sm" title="Import from CSV">
+                    <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
                     </svg>
-                    <span>Import</span>
+                    <span>Import CSV</span>
                 </button>
 
-                <a href="{{ route('admin.customers.create') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded shadow-sm flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <a href="{{ route('admin.customers.create') }}" class="btn-primary text-xs font-bold gap-1.5 shadow-md">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
-                    <span>Add New</span>
+                    <span>Add New Customer</span>
                 </a>
             </div>
         </div>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="py-6 space-y-6">
+        <div class="max-w-7xl mx-auto space-y-6">
             
-            <!-- Filters -->
-            <div class="theme-card mb-6">
-                <!-- ... existing filters code ... -->
+            <!-- Filter Bar Card -->
+            <div class="theme-card">
                 <form method="GET" action="{{ route('admin.customers.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search Company or Email..." class="theme-input">
+                    <div>
+                        <label class="theme-label mb-1">Company or Email</label>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search company, email..." class="theme-input text-xs dark:bg-slate-900 dark:text-white">
+                    </div>
                     
-                    <select name="type" class="theme-input">
-                        <option value="">All Types</option>
-                        <option value="Owner" {{ request('type') == 'Owner' ? 'selected' : '' }}>Ship Owner</option>
-                        <option value="Operator" {{ request('type') == 'Operator' ? 'selected' : '' }}>Ship Operator</option>
-                        <option value="Agent" {{ request('type') == 'Agent' ? 'selected' : '' }}>Agent</option>
-                        <option value="Manager" {{ request('type') == 'Manager' ? 'selected' : '' }}>Manager</option>
-                    </select>
+                    <div>
+                        <label class="theme-label mb-1">Customer Type</label>
+                        <select name="type" class="theme-input text-xs dark:bg-slate-900 dark:text-white">
+                            <option value="">All Customer Types</option>
+                            <option value="Owner" {{ request('type') == 'Owner' ? 'selected' : '' }}>Ship Owner</option>
+                            <option value="Operator" {{ request('type') == 'Operator' ? 'selected' : '' }}>Ship Operator</option>
+                            <option value="Agent" {{ request('type') == 'Agent' ? 'selected' : '' }}>Agent</option>
+                            <option value="Manager" {{ request('type') == 'Manager' ? 'selected' : '' }}>Manager</option>
+                        </select>
+                    </div>
 
-                    <select name="status" class="theme-input">
-                        <option value="">All Status</option>
-                        <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
-                        <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                    </select>
+                    <div>
+                        <label class="theme-label mb-1">Account Status</label>
+                        <select name="status" class="theme-input text-xs dark:bg-slate-900 dark:text-white">
+                            <option value="">All Statuses</option>
+                            <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
+                            <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                        </select>
+                    </div>
 
-                    <button type="submit" class="theme-button justify-center">Filter</button>
+                    <div class="flex items-end gap-2">
+                        <button type="submit" class="btn-primary text-xs font-bold w-full py-2.5 shadow-sm">Filter</button>
+                        <a href="{{ route('admin.customers.index') }}" class="btn-secondary text-xs font-bold py-2.5 px-3">Reset</a>
+                    </div>
                 </form>
             </div>
 
-            <!-- Table -->
-            <div class="theme-card p-0 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead>
-                            <tr>
-                                <th class="px-6 py-3 bg-gray-50 dark:bg-gray-800 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Company</th>
-                                <th class="px-6 py-3 bg-gray-50 dark:bg-gray-800 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-                                <th class="px-6 py-3 bg-gray-50 dark:bg-gray-800 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Location</th>
-                                <th class="px-6 py-3 bg-gray-50 dark:bg-gray-800 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Contacts</th>
-                                <th class="px-6 py-3 bg-gray-50 dark:bg-gray-800 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 bg-gray-50 dark:bg-gray-800 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            @foreach($customers as $customer)
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="font-bold text-marine-900 dark:text-white">{{ $customer->company_name }}</div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">{{ $customer->email }}</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        {{ $customer->type }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        {{ $customer->city ?? '-' }}, {{ $customer->country }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+            <!-- Customer Table Card -->
+            <div class="table-container">
+                <table class="theme-table">
+                    <thead>
+                        <tr class="theme-table-header">
+                            <th class="px-6 py-3.5">Company Name</th>
+                            <th class="px-6 py-3.5">Type</th>
+                            <th class="px-6 py-3.5">Location</th>
+                            <th class="px-6 py-3.5">Contacts</th>
+                            <th class="px-6 py-3.5">Status</th>
+                            <th class="px-6 py-3.5 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                        @forelse($customers as $customer)
+                            <tr class="theme-table-row">
+                                <td class="px-6 py-4">
+                                    <div class="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-2">
+                                        <a href="{{ route('admin.customers.show', $customer->id) }}" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                                            {{ $customer->company_name }}
+                                        </a>
+                                    </div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-mono">{{ $customer->email }}</div>
+                                </td>
+                                <td class="px-6 py-4 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                    {{ $customer->type ?? 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4 text-xs text-slate-600 dark:text-slate-400">
+                                    {{ $customer->city ?? '-' }}, {{ $customer->country }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="badge-neutral text-xs font-bold">
                                         {{ $customer->contacts->count() }} Contacts
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $customer->status == 'Active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
-                                            {{ $customer->status }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="{{ $customer->status == 'Active' ? 'badge-success' : 'badge-danger' }} text-xs font-bold">
+                                        {{ $customer->status }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex items-center justify-end gap-1.5">
                                         @if(auth()->user()->hasRole(['admin', 'manager', 'accounts']))
-                                        <a href="{{ route('admin.customers.ledger', $customer) }}" class="text-green-600 dark:text-green-400 hover:text-green-500 dark:hover:text-green-300 mr-2">Ledger</a>
+                                        <a href="{{ route('admin.customers.ledger', $customer) }}" class="btn-secondary btn-sm text-emerald-600 dark:text-emerald-400 font-bold">Ledger</a>
                                         @endif
-                                        <a href="{{ route('admin.customers.show', $customer->id) }}" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 mr-3">View</a>
-                                        <a href="{{ route('admin.customers.edit', $customer->id) }}" class="text-gray-600 dark:text-gray-400 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-300">Edit</a>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                    <div class="p-4 bg-white dark:bg-marine-900 border-t dark:border-marine-800">
-                        {{ $customers->appends(request()->query())->links() }}
-                    </div>
+                                        <a href="{{ route('admin.customers.show', $customer->id) }}" class="btn-secondary btn-sm text-brand-600 dark:text-brand-400 font-bold">View</a>
+                                        <a href="{{ route('admin.customers.edit', $customer->id) }}" class="btn-secondary btn-sm font-bold">Edit</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center text-slate-400 dark:text-slate-500 text-sm font-medium">
+                                    No customers found matching criteria.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+                @if($customers->hasPages())
+                <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60">
+                    {{ $customers->appends(request()->query())->links() }}
                 </div>
+                @endif
             </div>
         </div>
     </div>
@@ -117,45 +146,39 @@
          class="fixed inset-0 z-50 overflow-y-auto" 
          style="display: none;">
         
-        <div class="fixed inset-0 bg-gray-50 dark:bg-gray-7000 bg-opacity-75 transition-opacity" @click="open = false"></div>
+        <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs transition-opacity" @click="open = false"></div>
 
         <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+            <div class="relative transform overflow-hidden rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
                 <form action="{{ route('admin.customers.import') }}" method="POST" enctype="multipart/form-data">
                     @csrf
-                    <div class="bg-white dark:bg-gray-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start">
-                            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900 sm:mx-0 sm:h-10 sm:w-10">
-                                <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <div class="p-6 space-y-4">
+                        <div class="flex items-center gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
+                            <div class="w-10 h-10 rounded-lg bg-brand-50 dark:bg-brand-950/80 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-200 dark:border-brand-800/50">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                                 </svg>
                             </div>
-                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                                <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white" id="modal-title">Import Customers</h3>
-                                <div class="mt-2">
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                                        Upload a CSV file to import customers. 
-                                        <a href="{{ route('admin.customers.template') }}" class="text-blue-600 dark:text-blue-400 hover:underline">Download Template</a>
-                                    </p>
-                                    
-                                    <div class="mt-4">
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Choose CSV File</label>
-                                        <input type="file" name="file" accept=".csv" required class="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400
-                                            file:mr-4 file:py-2 file:px-4
-                                            file:rounded-full file:border-0
-                                            file:text-sm file:font-semibold
-                                            file:bg-blue-50 file:text-blue-700
-                                            hover:file:bg-blue-100
-                                            dark:file:bg-gray-700 dark:file:text-gray-300
-                                        "/>
-                                    </div>
-                                </div>
+                            <div>
+                                <h3 class="text-base font-bold text-slate-900 dark:text-white">Import Customer Accounts</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Upload a CSV file to bulk import customer records.</p>
                             </div>
                         </div>
+
+                        <div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                                Format requirement: CSV file with standard customer headers. 
+                                <a href="{{ route('admin.customers.template') }}" class="text-brand-600 dark:text-brand-400 font-bold hover:underline">Download CSV Template</a>
+                            </p>
+                            
+                            <label class="theme-label mb-1">Select CSV File</label>
+                            <input type="file" name="file" accept=".csv" required class="theme-input text-xs dark:bg-slate-900 dark:text-white"/>
+                        </div>
                     </div>
-                    <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                        <button type="submit" class="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto">Import</button>
-                        <button type="button" @click="open = false" class="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-800 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-300 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-700 sm:mt-0 sm:w-auto">Cancel</button>
+                    
+                    <div class="p-4 bg-slate-50 dark:bg-slate-950/60 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3">
+                        <button type="button" @click="open = false" class="btn-secondary text-xs font-bold">Cancel</button>
+                        <button type="submit" class="btn-primary text-xs font-bold">Upload & Import</button>
                     </div>
                 </form>
             </div>

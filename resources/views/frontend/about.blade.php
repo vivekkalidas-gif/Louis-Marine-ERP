@@ -18,7 +18,7 @@
                     <div class="w-full md:w-1/2">
                         @if($section->image_path)
                              <!-- Handle both local storage and external URLs -->
-                             <img src="{{ Str::startsWith($section->image_path, 'http') ? $section->image_path : asset('storage/' . $section->image_path) }}" 
+                             <img src="{{ Str::startsWith($section->image_path, 'http') ? $section->image_path : url('storage/' . $section->image_path) }}" 
                                   alt="{{ $section->title }}" 
                                   class="rounded-lg shadow-2xl object-cover w-full h-[400px]">
                         @endif

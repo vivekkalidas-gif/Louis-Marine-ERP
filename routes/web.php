@@ -11,24 +11,26 @@ use App\Http\Controllers\FrontController;
 |--------------------------------------------------------------------------
 */
 
-// TEMPORARY DIAGNOSTIC ROUTE TO VERIFY SERVER RESTART
-// TEMPORARY DIAGNOSTIC ROUTE TO VERIFY SERVER RESTART
-/*
-Route::get('/test-fpdi', function() {
-    try {
-        if (!class_exists('\setasign\Fpdi\Fpdi')) {
-            return "FAIL: FPDI Class Not Found. You MUST restart 'php artisan serve'.";
-        }
-        $pdf = new \setasign\Fpdi\Fpdi();
-        return "SUCCESS: FPDI Library Loaded Correctly. The PDF system is ready.";
-    } catch (\Throwable $e) {
-        return "ERROR: " . $e->getMessage();
-    }
-});
-*/
-
 use App\Http\Controllers\Front\ProductController;
 use App\Http\Controllers\Front\ServicesController;
+
+// Fallback Route to serve storage files via PHP (Fix for symlink issues)
+Route::get('/storage-file/{path}', function ($path) {
+    // Clean up path and ensure it's relative to public storage
+    $path = str_replace(['../', './'], '', $path);
+    $fullPath = storage_path("app/public/" . str_replace('/', DIRECTORY_SEPARATOR, $path));
+    
+    if (!file_exists($fullPath) || is_dir($fullPath)) {
+        abort(404);
+    }
+    
+    // Determine mime type
+    $mime = mime_content_type($fullPath);
+    return response()->file($fullPath, [
+        'Content-Type' => $mime,
+        'Cache-Control' => 'public, max-age=3600',
+    ]);
+})->where('path', '.*');
 
 // Front Routes
 Route::prefix('products')->name('products.')->group(function() {
@@ -44,6 +46,36 @@ Route::prefix('services')->name('services.')->group(function() {
 // Web Installer
 Route::get('/install', [\App\Http\Controllers\System\InstallerController::class, 'show'])->name('system.install');
 Route::post('/install', [\App\Http\Controllers\System\InstallerController::class, 'run'])->name('system.install.run');
+
+// Production Deployment Helpers (No SSH Access)
+Route::get('/system/migrate/louis-deploy-2026', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        return "Migration successful: " . \Illuminate\Support\Facades\Artisan::output();
+    } catch (\Exception $e) {
+        return "Migration failed: " . $e->getMessage();
+    }
+});
+
+Route::get('/system/cache-clear/louis-deploy-2026', function () {
+    \Illuminate\Support\Facades\Artisan::call('cache:clear');
+    \Illuminate\Support\Facades\Artisan::call('view:clear');
+    \Illuminate\Support\Facades\Artisan::call('config:clear');
+    \Illuminate\Support\Facades\Artisan::call('route:clear');
+    return "Cache cleared successfully.";
+});
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Front Routes
 Route::get('/', [FrontController::class, 'home'])->name('home');
@@ -148,6 +180,7 @@ Route::middleware(['auth', 'role:super-admin|admin|manager|pro|engineer|accounta
     Route::post('certificate-templates/import', [\App\Http\Controllers\Admin\CertificateTemplateController::class, 'import'])->name('certificate-templates.import');
 
     Route::resource('certificate-templates', \App\Http\Controllers\Admin\CertificateTemplateController::class);
+    Route::post('certificate-templates/{certificateTemplate}/duplicate', [\App\Http\Controllers\Admin\CertificateTemplateController::class, 'duplicate'])->name('certificate-templates.duplicate');
     Route::post('certificate-templates/{certificateTemplate}/toggle', [\App\Http\Controllers\Admin\CertificateTemplateController::class, 'toggle'])->name('certificate-templates.toggle');
     Route::post('certificate-templates/{certificateTemplate}/default', [\App\Http\Controllers\Admin\CertificateTemplateController::class, 'setDefault'])->name('certificate-templates.set-default');
     Route::get('certificate-templates/{certificateTemplate}/preview', [\App\Http\Controllers\Admin\CertificateTemplateController::class, 'preview'])->name('certificate-templates.preview');
@@ -194,15 +227,34 @@ Route::middleware(['auth', 'role:super-admin|admin|manager|pro|accountant|engine
     Route::get('dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
     
     // Core Modules
+    // Existing routes...
+    
+    // System Maintenance Tools (For Production without SSH)
+    Route::get('maintenance', [\App\Http\Controllers\Admin\SystemMaintenanceController::class, 'index'])->name('admin.maintenance.index');
+    Route::post('maintenance/seed-accounting', [\App\Http\Controllers\Admin\SystemMaintenanceController::class, 'runAccountingSeeder'])->name('admin.maintenance.seed-accounting');
+    Route::post('maintenance/clear-cache', [\App\Http\Controllers\Admin\SystemMaintenanceController::class, 'clearCache'])->name('admin.maintenance.clear-cache');
+    
     Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
+    Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class);
+    
+    // Staff Management (Advance/Ledger)
+    Route::post('staff/{user}/ledger', [\App\Http\Controllers\Admin\StaffController::class, 'storeData'])->name('staff.ledger.store');
+    Route::resource('staff', \App\Http\Controllers\Admin\StaffController::class);
     
     // Activity Logs
     Route::get('activity-logs', [\App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-logs.index');
     Route::get('activity-logs/{id}', [\App\Http\Controllers\Admin\ActivityLogController::class, 'show'])->name('activity-logs.show');
         
     // Dispatch Notes
+    Route::get('dispatch/{dispatch_note}/pdf', [\App\Http\Controllers\Admin\DispatchNoteController::class, 'pdf'])->name('dispatch.pdf');
     Route::resource('dispatch', \App\Http\Controllers\Admin\DispatchNoteController::class)->parameters(['dispatch' => 'dispatch_note']);
     Route::post('jobs/{job}/documents', [\App\Http\Controllers\Admin\ServiceJobController::class, 'storeDocument'])->name('jobs.documents.store');
+    Route::get('jobs/{job}/pdf', [\App\Http\Controllers\Admin\ServiceJobController::class, 'pdf'])->name('jobs.pdf');
+    
+    // Job Items
+    Route::post('jobs/{job}/items', [\App\Http\Controllers\Admin\ServiceJobItemController::class, 'store'])->name('jobs.items.store');
+    Route::delete('jobs/{job}/items/{item}', [\App\Http\Controllers\Admin\ServiceJobItemController::class, 'destroy'])->name('jobs.items.destroy');
+    
     Route::resource('jobs', \App\Http\Controllers\Admin\ServiceJobController::class);
     // Inventory - mapped to admin.inventory.products.*
     Route::prefix('inventory')->as('inventory.')->group(function() {
@@ -228,6 +280,7 @@ Route::middleware(['auth', 'role:super-admin|admin|manager|pro|accountant|engine
             Route::post('store', [\App\Http\Controllers\Admin\Accounts\PayrollController::class, 'store'])->name('store');
             // Overtime
             Route::resource('overtime', \App\Http\Controllers\Admin\Accounts\OvertimeController::class);
+            Route::post('deduction', [\App\Http\Controllers\Admin\Accounts\PayrollController::class, 'storeDeduction'])->name('deduction.store');
 
             Route::get('{payroll}', [\App\Http\Controllers\Admin\Accounts\PayrollController::class, 'show'])->name('show');
             Route::post('{payroll}/finalize', [\App\Http\Controllers\Admin\Accounts\PayrollController::class, 'finalize'])->name('finalize');
@@ -249,10 +302,9 @@ Route::middleware(['auth', 'role:super-admin|admin|manager|pro|accountant|engine
     Route::prefix('cms')->as('cms.')->group(function() {
         Route::get('dashboard', [\App\Http\Controllers\Admin\CmsController::class, 'dashboard'])->name('dashboard');
         
-        // Services
-        Route::get('services', [\App\Http\Controllers\Admin\Cms\CmsController::class, 'servicesIndex'])->name('services.index');
-        Route::post('services', [\App\Http\Controllers\Admin\Cms\CmsController::class, 'servicesStore'])->name('services.store');
-        Route::delete('services/{service}', [\App\Http\Controllers\Admin\Cms\CmsController::class, 'servicesDestroy'])->name('services.destroy');
+        // Services / Offerings
+        Route::post('services/sync-erp', [\App\Http\Controllers\Admin\Cms\ServiceController::class, 'syncFromErp'])->name('services.sync-erp');
+        Route::resource('services', \App\Http\Controllers\Admin\Cms\ServiceController::class);
         
         // Products (Website Products)
         Route::resource('products', \App\Http\Controllers\Admin\Cms\WebsiteProductController::class);
@@ -266,17 +318,22 @@ Route::middleware(['auth', 'role:super-admin|admin|manager|pro|accountant|engine
         Route::patch('contact-submissions/{submission}/status', [\App\Http\Controllers\Admin\Cms\ContactSubmissionController::class, 'updateStatus'])->name('contact-submissions.status');
         
         // Partners
-        Route::get('partners', [\App\Http\Controllers\Admin\Cms\CmsController::class, 'partnersIndex'])->name('partners.index');
-        Route::post('partners', [\App\Http\Controllers\Admin\Cms\CmsController::class, 'partnersStore'])->name('partners.store');
-        Route::delete('partners/{partner}', [\App\Http\Controllers\Admin\Cms\CmsController::class, 'partnersDestroy'])->name('partners.destroy');
+        // Partners
+        Route::resource('partners', \App\Http\Controllers\Admin\Cms\PartnerController::class);
+
+        // Pages Management
+        Route::resource('pages', \App\Http\Controllers\Admin\Cms\CmsPageController::class);
+        Route::resource('pages.sections', \App\Http\Controllers\Admin\Cms\PageSectionController::class);
         
-        // Certifications
-        Route::get('certifications', [\App\Http\Controllers\Admin\Cms\CmsController::class, 'certificationsIndex'])->name('certifications.index');
-        Route::post('certifications', [\App\Http\Controllers\Admin\Cms\CmsController::class, 'certificationsStore'])->name('certifications.store');
-        Route::delete('certifications/{certification}', [\App\Http\Controllers\Admin\Cms\CmsController::class, 'certificationsDestroy'])->name('certifications.destroy');
+        // Approvals / Certifications
+        Route::resource('certifications', \App\Http\Controllers\Admin\Cms\CertificationController::class);
         
         // Landing Page Editor
         Route::prefix('landing-page')->as('landing-page.')->group(function() {
+            Route::get('/', function() {
+                return redirect()->route('admin.cms.landing-page.hero-slides.index');
+            })->name('index');
+            
             // Hero Slides
             Route::resource('hero-slides', \App\Http\Controllers\Admin\Cms\HeroSlideController::class);
             Route::post('hero-slides/reorder', [\App\Http\Controllers\Admin\Cms\HeroSlideController::class, 'reorder'])->name('hero-slides.reorder');
@@ -302,6 +359,7 @@ Route::middleware(['auth', 'role:super-admin|admin|manager|pro|accountant|engine
 // ENGINEER ROUTES RECONSTRUCTION
 Route::middleware(['auth', 'role:engineer'])->prefix('engineer')->as('engineer.')->group(function () {
     Route::get('dashboard', [\App\Http\Controllers\Engineer\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('jobs/{job}/pdf', [\App\Http\Controllers\Engineer\JobController::class, 'pdf'])->name('jobs.pdf');
     Route::resource('jobs', \App\Http\Controllers\Engineer\JobController::class);
     Route::get('jobs/{job}/delivery-note', [\App\Http\Controllers\Engineer\JobController::class, 'deliveryNote'])->name('jobs.delivery-note');
     Route::get('jobs/{job}/assignments/create', [\App\Http\Controllers\Engineer\AssignmentController::class, 'create'])->name('assignments.create');
@@ -471,8 +529,12 @@ Route::middleware(['auth', 'role:storekeeper|admin|manager'])->prefix('storekeep
     Route::post('tool-requests/{toolRequest}/issue', [\App\Http\Controllers\Storekeeper\ToolController::class, 'issue'])->name('tool-requests.issue');
     Route::post('tool-requests/{toolRequest}/reject', [\App\Http\Controllers\Storekeeper\ToolController::class, 'reject'])->name('tool-requests.reject');
     Route::post('tool-requests/{toolRequest}/return', [\App\Http\Controllers\Storekeeper\ToolController::class, 'returnItem'])->name('tool-requests.return');
+    Route::post('tool-requests/{toolRequest}/approve', [\App\Http\Controllers\Storekeeper\ToolController::class, 'approve'])->name('tool-requests.approve');
     Route::post('delivery-notes/{deliveryNote}/dispatch', [\App\Http\Controllers\Storekeeper\DeliveryNoteController::class, 'dispatchNote'])->name('delivery-notes.dispatch');
     Route::get('delivery-notes/{deliveryNote}/print', [\App\Http\Controllers\Storekeeper\DeliveryNoteController::class, 'print'])->name('delivery-notes.print');
+
+    // Equipment (Reused from Engineer)
+    Route::resource('equipment', \App\Http\Controllers\Engineer\EquipmentController::class);
 });
 
 // SHARED RFQ & SUPPLIER MODULE (Accessible by Storekeeper & Accounts)
@@ -521,3 +583,15 @@ Route::middleware(['auth', 'role:super-admin'])->prefix('admin')->as('admin.')->
 
 // PUBLIC VERIFICATION
 Route::get('verify/{number}', [\App\Http\Controllers\Admin\CertificateController::class, 'verifyPublic'])->name('certificates.verify-public');
+
+// STAFF LEDGER CUSTOM ROUTES & PRINT
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->as('admin.')->group(function() {
+    Route::put('staff/ledger/{id}', [\App\Http\Controllers\Admin\StaffController::class, 'updateLedgerEntry'])->name('staff.ledger.update');
+    Route::delete('staff/ledger/{id}', [\App\Http\Controllers\Admin\StaffController::class, 'destroyLedgerEntry'])->name('staff.ledger.destroy');
+    Route::get('staff/ledger/{id}/print', [\App\Http\Controllers\Admin\StaffController::class, 'printLedgerEntry'])->name('staff.ledger.print');
+});
+
+// PETTY CASH MODULE
+Route::middleware(['auth', 'role:admin|accountant'])->prefix('admin/accounts')->as('admin.accounts.')->group(function() {
+    Route::resource('petty-cash', \App\Http\Controllers\Admin\Accounts\PettyCashController::class);
+});

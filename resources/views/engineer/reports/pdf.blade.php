@@ -70,14 +70,34 @@
         }
     </style>
 </head>
+@php
+    $settings = \App\Models\Setting::getAllCached();
+    $companyName = $settings['company_name'] ?? 'DIya Tech Marine';
+    $companyAddress = $settings['company_address'] ?? '';
+    $companyPhone = $settings['company_phone'] ?? '';
+    $companyEmail = $settings['company_email'] ?? '';
+    
+    $logoPath = storage_path('app/public/' . ($settings['company_logo'] ?? ''));
+    $logoBase64 = '';
+    if (!empty($settings['company_logo']) && file_exists($logoPath)) {
+        $type = pathinfo($logoPath, PATHINFO_EXTENSION);
+        $data = file_get_contents($logoPath);
+        $logoBase64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+    }
+@endphp
 <body>
     <div class="header">
         <table>
             <tr>
                 <td style="width: 60%">
-                    <div class="logo">{{ config('app.name', 'Laravel') }}</div>
+                    @if($logoBase64)
+                        <img src="{{ $logoBase64 }}" style="max-height: 48px; width: auto; margin-bottom: 4px;"><br>
+                    @endif
+                    <div class="logo">{{ $companyName }}</div>
                     <div style="font-size: 11px; color: #666; margin-top: 4px;">
-                        Technical Services & Maintenance
+                        @if($companyAddress) {!! nl2br(e($companyAddress)) !!}<br> @endif
+                        @if($companyPhone) Tel: {{ $companyPhone }} @endif
+                        @if($companyEmail) | Email: {{ $companyEmail }} @endif
                     </div>
                 </td>
                 <td style="width: 40%; text-align: right;">
@@ -96,16 +116,16 @@
         <tr>
             <td style="width: 48%; border: 1px solid #ddd; padding: 10px;">
                 <div class="label" style="border-bottom: 1px solid #eee; margin-bottom: 8px; padding-bottom: 4px;">Customer Details</div>
-                <strong>{{ $report->job->customer->company_name }}</strong><br>
-                {{ $report->job->customer->address ?? '' }}<br>
-                {{ $report->job->customer->email }}<br>
-                {{ $report->job->customer->phone ?? '' }}
+                <strong>{{ $report->job?->customer?->company_name ?? 'N/A' }}</strong><br>
+                {{ $report->job?->customer?->address ?? '' }}<br>
+                {{ $report->job?->customer?->email ?? '' }}<br>
+                {{ $report->job?->customer?->phone ?? '' }}
             </td>
             <td style="width: 4%;"></td>
             <td style="width: 48%; border: 1px solid #ddd; padding: 10px;">
                 <div class="label" style="border-bottom: 1px solid #eee; margin-bottom: 8px; padding-bottom: 4px;">Vessel / Site Details</div>
-                <strong>{{ $report->job->vessel->name ?? 'N/A' }}</strong><br>
-                @if(optional($report->job->vessel)->imo_number)
+                <strong>{{ $report->job?->vessel?->name ?? 'N/A' }}</strong><br>
+                @if(!empty($report->job?->vessel?->imo_number))
                 IMO: {{ $report->job->vessel->imo_number }}<br>
                 @endif
                 Location: {{ $report->job->location_details ?? 'N/A' }}

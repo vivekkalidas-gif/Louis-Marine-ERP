@@ -48,7 +48,13 @@
             <div class="flex justify-between items-center">
                 <!-- Logo -->
                 <div class="flex-shrink-0">
-                    <img class="h-16 w-auto" src="https://louismarineqatar.com/wp-content/uploads/2024/11/logo.jpg" alt="Louis Marine Qatar">
+                    <a href="{{ route('home') }}">
+                        @if(isset($globalSettings['company_logo']) && !empty($globalSettings['company_logo']))
+                            <img class="h-16 w-auto" src="{{ url('storage/' . $globalSettings['company_logo']) }}" alt="{{ $globalSettings['company_name'] ?? 'Louis Marine Qatar' }}">
+                        @else
+                            <img class="h-16 w-auto" src="{{ asset('images/logo.jpg') }}" alt="Louis Marine Qatar">
+                        @endif
+                    </a>
                 </div>
                 
                 <!-- Desktop Menu -->
@@ -78,9 +84,9 @@
     </header>
 
     <!-- Hero Section -->
-    <div class="relative h-[600px] bg-cover bg-center" style="background-image: url('{{ $hero ? $hero->image_path : 'https://louismarineqatar.com/wp-content/uploads/2024/11/banner1-1.jpg' }}');">
+    <div class="relative h-[600px] bg-cover bg-center" style="background-image: url('{{ $hero && $hero->background_image ? url('storage/' . $hero->background_image) : asset('images/hero-fallback.jpg') }}');">
         <!-- Overlay -->
-        <div class="absolute inset-0 bg-[#0b1c3c]/60"></div>
+        <!-- Overlay Removed -->
         
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
             <div class="text-white max-w-2xl px-4 md:px-0 text-center md:text-left">
@@ -187,7 +193,11 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
                 <!-- Footer 1 -->
                 <div>
-                    <img class="h-12 w-auto mb-6 bg-white dark:bg-gray-800 p-2 rounded" src="https://louismarineqatar.com/wp-content/uploads/2024/11/logo.jpg" alt="Louis Marine">
+                    @if(isset($globalSettings['company_logo']) && !empty($globalSettings['company_logo']))
+                        <img class="h-12 w-auto mb-6 bg-white dark:bg-gray-800 p-2 rounded" src="{{ url('storage/' . $globalSettings['company_logo']) }}" alt="{{ $globalSettings['company_name'] ?? 'Louis Marine Qatar' }}">
+                    @else
+                        <img class="h-12 w-auto mb-6 bg-white dark:bg-gray-800 p-2 rounded" src="https://louismarineqatar.com/wp-content/uploads/2024/11/logo.jpg" alt="Louis Marine">
+                    @endif
                     <p class="text-gray-400 text-sm leading-relaxed mb-6">
                         We are one of the leading stockist for marine safety, survival and fire fighting equipment in Qatar since 1999.
                     </p>

@@ -1,179 +1,335 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-white leading-tight">
-            {{ __('System Settings') }}
-        </h2>
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h2 class="font-black text-xl text-slate-900 dark:text-white leading-tight tracking-tight flex items-center gap-2">
+                    <svg class="w-6 h-6 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span>System Settings & Branding</span>
+                </h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Manage company details, branding assets, numbering sequences, and security preferences</p>
+            </div>
+        </div>
     </x-slot>
 
-    <div class="py-12" x-data="{ activeTab: 'company' }">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="py-6 space-y-6" x-data="{ activeTab: 'company' }">
+        
+        @if(session('success'))
+        <div class="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 text-emerald-800 dark:text-emerald-200 text-xs font-semibold flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>{{ session('success') }}</span>
+            </div>
+        </div>
+        @endif
+
+        @if($errors->any())
+        <div class="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/80 text-rose-800 dark:text-rose-200 text-xs font-semibold space-y-1">
+            <div class="flex items-center gap-2 font-bold text-rose-900 dark:text-rose-100">
+                <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Unable to update settings:</span>
+            </div>
+            <ul class="list-disc list-inside pl-6 space-y-0.5">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
+
+        <!-- High-Density SaaS Tab Navigation Bar -->
+        <div class="p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-1 overflow-x-auto">
+            <button @click="activeTab = 'company'" 
+                    :class="activeTab === 'company' ? 'bg-brand-600 text-white shadow-md font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'" 
+                    class="px-4 py-2 text-xs rounded-xl transition whitespace-nowrap flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                <span>Company Profile</span>
+            </button>
+
+            <button @click="activeTab = 'branding'" 
+                    :class="activeTab === 'branding' ? 'bg-brand-600 text-white shadow-md font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'" 
+                    class="px-4 py-2 text-xs rounded-xl transition whitespace-nowrap flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                <span>Branding & Theme</span>
+            </button>
+
+            <button @click="activeTab = 'email'" 
+                    :class="activeTab === 'email' ? 'bg-brand-600 text-white shadow-md font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'" 
+                    class="px-4 py-2 text-xs rounded-xl transition whitespace-nowrap flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                <span>Email & Notifications</span>
+            </button>
+
+            <button @click="activeTab = 'numbering'" 
+                    :class="activeTab === 'numbering' ? 'bg-brand-600 text-white shadow-md font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'" 
+                    class="px-4 py-2 text-xs rounded-xl transition whitespace-nowrap flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/></svg>
+                <span>Numbering Format</span>
+            </button>
+
+            <button @click="activeTab = 'security'" 
+                    :class="activeTab === 'security' ? 'bg-brand-600 text-white shadow-md font-bold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium'" 
+                    class="px-4 py-2 text-xs rounded-xl transition whitespace-nowrap flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                <span>Security & System</span>
+            </button>
+        </div>
+
+        <!-- Main Settings Form -->
+        <form action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data">
+            @csrf
             
-            <!-- Tabs Navigation -->
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-4">
-                <nav class="flex space-x-4 border-b border-gray-200 dark:border-gray-700" aria-label="Tabs">
-                    <button @click="activeTab = 'company'" :class="{ 'border-blue-500 text-blue-600': activeTab === 'company', 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 hover:border-gray-300': activeTab !== 'company' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                        Company Profile
-                    </button>
-                    <button @click="activeTab = 'branding'" :class="{ 'border-blue-500 text-blue-600': activeTab === 'branding', 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 hover:border-gray-300': activeTab !== 'branding' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                        Branding & Theme
-                    </button>
-                    <button @click="activeTab = 'email'" :class="{ 'border-blue-500 text-blue-600': activeTab === 'email', 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 hover:border-gray-300': activeTab !== 'email' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                        Email & Notifications
-                    </button>
-                    <button @click="activeTab = 'numbering'" :class="{ 'border-blue-500 text-blue-600': activeTab === 'numbering', 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 hover:border-gray-300': activeTab !== 'numbering' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                        Numbering Format
-                    </button>
-                    <button @click="activeTab = 'security'" :class="{ 'border-blue-500 text-blue-600': activeTab === 'security', 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 hover:border-gray-300': activeTab !== 'security' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                        Security & System
-                    </button>
-                </nav>
+            <!-- Company Profile Tab -->
+            <div x-show="activeTab === 'company'" class="theme-card space-y-6">
+                <div class="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Company Information</h3>
+                    <span class="text-xs text-slate-500">Corporate details on invoices & certificates</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="theme-label mb-1.5">Company Name</label>
+                        <input type="text" name="company_name" value="{{ $settings->get('company')?->where('key', 'company_name')->first()->value ?? 'Louis Marine Qatar' }}" class="theme-input text-xs font-bold">
+                    </div>
+
+                    <div>
+                        <label class="theme-label mb-1.5">Company Email</label>
+                        <input type="email" name="company_email" value="{{ $settings->get('company')?->where('key', 'company_email')->first()->value ?? 'info@safetylinkmarine.com' }}" class="theme-input text-xs font-bold">
+                    </div>
+
+                    <div>
+                        <label class="theme-label mb-1.5">Phone Number</label>
+                        <input type="text" name="company_phone" value="{{ $settings->get('company')?->where('key', 'company_phone')->first()->value ?? '' }}" class="theme-input text-xs font-mono">
+                    </div>
+
+                    <div>
+                        <label class="theme-label mb-1.5">Official Website URL</label>
+                        <input type="url" name="company_website" value="{{ $settings->get('company')?->where('key', 'company_website')->first()->value ?? '' }}" class="theme-input text-xs font-mono" placeholder="https://">
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="theme-label mb-1.5">Corporate Address</label>
+                        <textarea name="company_address" rows="3" class="theme-input text-xs">{{ $settings->get('company')?->where('key', 'company_address')->first()->value ?? '' }}</textarea>
+                    </div>
+                </div>
             </div>
 
-            <!-- Settings Form -->
-            <form action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                
-                <!-- Company Profile Tab -->
-                <div x-show="activeTab === 'company'" class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6 space-y-6">
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b dark:border-gray-700 pb-2">Company Information</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <x-input-label for="company_name" :value="__('Company Name')" />
-                            <x-text-input id="company_name" name="company_name" type="text" class="mt-1 block w-full" :value="$settings->get('company')?->where('key', 'company_name')->first()->value ?? ''" required />
-                        </div>
-                        <div>
-                            <x-input-label for="company_email" :value="__('Company Email')" />
-                            <x-text-input id="company_email" name="company_email" type="email" class="mt-1 block w-full" :value="$settings->get('company')?->where('key', 'company_email')->first()->value ?? ''" required />
-                        </div>
-                         <div>
-                            <x-input-label for="company_phone" :value="__('Phone Number')" />
-                            <x-text-input id="company_phone" name="company_phone" type="text" class="mt-1 block w-full" :value="$settings->get('company')?->where('key', 'company_phone')->first()->value ?? ''" />
-                        </div>
-                         <div>
-                            <x-input-label for="company_website" :value="__('Website')" />
-                            <x-text-input id="company_website" name="company_website" type="url" class="mt-1 block w-full" :value="$settings->get('company')?->where('key', 'company_website')->first()->value ?? ''" />
-                        </div>
-                        <div class="md:col-span-2">
-                             <x-input-label for="company_address" :value="__('Address')" />
-                             <textarea id="company_address" name="company_address" class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm block w-full mt-1" rows="3">{{ $settings->get('company')?->where('key', 'company_address')->first()->value ?? '' }}</textarea>
-                        </div>
-                    </div>
+            <!-- Branding Tab -->
+            <div x-show="activeTab === 'branding'" class="theme-card space-y-6" style="display: none;">
+                <div class="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Branding & Theme Customization</h3>
+                    <span class="text-xs text-slate-500">Logos, favicons & A4 document layouts</span>
                 </div>
 
-                <!-- Branding Tab -->
-                <div x-show="activeTab === 'branding'" class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6 space-y-6" style="display: none;">
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b dark:border-gray-700 pb-2">Branding & Theme</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                         <div>
-                            <x-input-label for="company_logo" :value="__('Company Logo')" />
-                            <input type="file" name="company_logo" class="mt-1 block w-full border border-gray-300 rounded p-2">
-                            @if($logo = $settings->get('branding')?->where('key', 'company_logo')->first())
-                                <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">Current: <a href="{{ asset($logo->value) }}" target="_blank" class="text-blue-600 underline">View Logo</a></div>
-                            @endif
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="theme-label mb-1.5">Company Main Logo</label>
+                        <input type="file" name="company_logo" class="theme-input text-xs py-2">
+                        @if($logo = $settings->get('branding')?->where('key', 'company_logo')->first())
+                            <div class="mt-2 text-xs text-slate-500 flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-lg border border-slate-200 dark:border-slate-700">
+                                <span>Current:</span>
+                                <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($logo->value) }}" target="_blank" class="text-brand-600 dark:text-brand-400 font-bold hover:underline">Preview Main Logo</a>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div>
+                        <label class="theme-label mb-1.5">Browser Favicon</label>
+                        <input type="file" name="site_favicon" class="theme-input text-xs py-2">
+                    </div>
+
+                    <div>
+                        <label class="theme-label mb-1.5">Primary Theme Accent Color</label>
+                        <div class="flex items-center gap-2">
+                            <input type="color" name="branding_primary_color" class="h-9 w-14 rounded-lg cursor-pointer border border-slate-300 dark:border-slate-700" value="{{ $settings->get('branding')?->where('key', 'branding_primary_color')->first()->value ?? '#1e3a8a' }}">
+                            <input type="text" class="theme-input text-xs font-mono w-full" value="{{ $settings->get('branding')?->where('key', 'branding_primary_color')->first()->value ?? '#1e3a8a' }}" readonly>
                         </div>
+                    </div>
+
+                    <div>
+                        <label class="theme-label mb-1.5">Logo Height (px)</label>
+                        <input type="number" name="branding_logo_height" value="{{ $settings->get('branding')?->where('key', 'branding_logo_height')->first()->value ?? '40' }}" min="20" max="100" class="theme-input text-xs font-mono">
+                        <p class="text-[11px] text-slate-500 mt-1">Default 40px height for optimal header navigation proportion.</p>
+                    </div>
+
+                    @if(config('app.certificate_only')) @include('admin.settings.partials.cert-theme-picker') @endif
+
+                    <!-- Certificate A4 Header & Footer Overlay Sub-Card -->
+                    <div class="md:col-span-2 p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-4 mt-2">
                         <div>
-                             <x-input-label for="site_favicon" :value="__('Favicon')" />
-                             <input type="file" name="site_favicon" class="mt-1 block w-full border border-gray-300 rounded p-2">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                Certificate A4 Custom PNG Overlays
+                            </h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Upload pre-designed A4 header & footer PNG images to overlay onto print certificates.</p>
                         </div>
-                        <div>
-                            <x-input-label for="branding_primary_color" :value="__('Primary Color')" />
-                            <div class="flex items-center gap-2 mt-1">
-                                <input type="color" id="branding_primary_color" name="branding_primary_color" class="h-10 w-20" value="{{ $settings->get('branding')?->where('key', 'branding_primary_color')->first()->value ?? '#1e3a8a' }}">
-                                <x-text-input type="text" class="block w-full" :value="$settings->get('branding')?->where('key', 'branding_primary_color')->first()->value ?? '#1e3a8a'" readonly />
+
+                        @php
+                            $certHeaderObj = \App\Models\Setting::where('key', 'certificate_header_png')->first();
+                            $certFooterObj = \App\Models\Setting::where('key', 'certificate_footer_png')->first();
+                        @endphp
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="theme-label mb-1.5">Certificate Header PNG</label>
+                                <input type="file" name="certificate_header_png" accept="image/*,.png,.jpg,.jpeg,.webp" class="theme-input text-xs py-2">
+                                @error('certificate_header_png')
+                                    <p class="text-xs text-rose-600 font-semibold mt-1">{{ $message }}</p>
+                                @enderror
+                                @if($certHeaderObj && !empty($certHeaderObj->value))
+                                    <div class="mt-2.5 text-xs text-slate-500 bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                Header Overlay Active
+                                            </span>
+                                            <label class="inline-flex items-center text-xs text-rose-500 font-bold cursor-pointer gap-1 hover:underline">
+                                                <input type="checkbox" name="remove_certificate_header_png" value="1" class="rounded text-rose-600">
+                                                <span>Remove</span>
+                                            </label>
+                                        </div>
+                                        <div class="p-2 bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 text-center">
+                                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($certHeaderObj->value) }}" alt="Header Overlay" class="max-h-24 w-full object-contain mx-auto">
+                                            <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($certHeaderObj->value) }}" target="_blank" class="text-[11px] text-brand-600 dark:text-brand-400 font-bold hover:underline mt-1.5 inline-block">View Full Image ↗</a>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div>
+                                <label class="theme-label mb-1.5">Certificate Footer PNG</label>
+                                <input type="file" name="certificate_footer_png" accept="image/*,.png,.jpg,.jpeg,.webp" class="theme-input text-xs py-2">
+                                @error('certificate_footer_png')
+                                    <p class="text-xs text-rose-600 font-semibold mt-1">{{ $message }}</p>
+                                @enderror
+                                @if($certFooterObj && !empty($certFooterObj->value))
+                                    <div class="mt-2.5 text-xs text-slate-500 bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700 space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                Footer Overlay Active
+                                            </span>
+                                            <label class="inline-flex items-center text-xs text-rose-500 font-bold cursor-pointer gap-1 hover:underline">
+                                                <input type="checkbox" name="remove_certificate_footer_png" value="1" class="rounded text-rose-600">
+                                                <span>Remove</span>
+                                            </label>
+                                        </div>
+                                        <div class="p-2 bg-slate-100 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 text-center">
+                                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($certFooterObj->value) }}" alt="Footer Overlay" class="max-h-24 w-full object-contain mx-auto">
+                                            <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($certFooterObj->value) }}" target="_blank" class="text-[11px] text-brand-600 dark:text-brand-400 font-bold hover:underline mt-1.5 inline-block">View Full Image ↗</a>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                         </div>
-                        <div>
-                             <x-input-label for="branding_logo_height" :value="__('Logo Height (px)')" />
-                             <x-text-input id="branding_logo_height" name="branding_logo_height" type="number" class="mt-1 block w-full" :value="$settings->get('branding')?->where('key', 'branding_logo_height')->first()->value ?? '40'" min="20" max="100" />
-                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Default is 40px. Adjust to fit your logo aspect ratio.</p>
-                        </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Email Tab -->
-                <div x-show="activeTab === 'email'" class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6 space-y-6" style="display: none;">
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b dark:border-gray-700 pb-2">Email Configuration</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <x-input-label for="mail_from_name" :value="__('From Name')" />
-                            <x-text-input id="mail_from_name" name="mail_from_name" type="text" class="mt-1 block w-full" :value="$settings->get('email')?->where('key', 'mail_from_name')->first()->value ?? config('app.name')" />
-                        </div>
-                         <div>
-                            <x-input-label for="mail_from_address" :value="__('From Email Address')" />
-                            <x-text-input id="mail_from_address" name="mail_from_address" type="email" class="mt-1 block w-full" :value="$settings->get('email')?->where('key', 'mail_from_address')->first()->value ?? ''" />
-                        </div>
-                        <div>
-                            <label class="inline-flex items-center mt-6">
-                                <input type="hidden" name="mail_notify_expiry" value="0">
-                                <input type="checkbox" name="mail_notify_expiry" value="1" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" {{ ($settings->get('email')?->where('key', 'mail_notify_expiry')->first()->value ?? '0') == '1' ? 'checked' : '' }}>
-                                <span class="ml-2 text-gray-700 dark:text-gray-300">Enable Certificate Expiry Notifications</span>
-                            </label>
-                        </div>
+            <!-- Email Tab -->
+            <div x-show="activeTab === 'email'" class="theme-card space-y-6" style="display: none;">
+                <div class="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Email & Notifications</h3>
+                    <span class="text-xs text-slate-500">Sender details and automated email alerts</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="theme-label mb-1.5">Sender Name</label>
+                        <input type="text" name="mail_from_name" value="{{ $settings->get('email')?->where('key', 'mail_from_name')->first()->value ?? config('app.name') }}" class="theme-input text-xs font-bold">
+                    </div>
+
+                    <div>
+                        <label class="theme-label mb-1.5">Sender Email Address</label>
+                        <input type="email" name="mail_from_address" value="{{ $settings->get('email')?->where('key', 'mail_from_address')->first()->value ?? '' }}" class="theme-input text-xs font-bold">
+                    </div>
+
+                    <div class="md:col-span-2 pt-2">
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                            <input type="hidden" name="mail_notify_expiry" value="0">
+                            <input type="checkbox" name="mail_notify_expiry" value="1" class="rounded text-brand-600 focus:ring-brand-500" {{ ($settings->get('email')?->where('key', 'mail_notify_expiry')->first()->value ?? '0') == '1' ? 'checked' : '' }}>
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Enable Automated Certificate Expiry Email Alerts</span>
+                        </label>
                     </div>
                 </div>
+            </div>
 
-                <!-- Numbering Tab -->
-                 <div x-show="activeTab === 'numbering'" class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6 space-y-6" style="display: none;">
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b dark:border-gray-700 pb-2">Prefix & Numbering</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div>
-                            <x-input-label for="prefix_invoice" :value="__('Invoice Prefix')" />
-                            <x-text-input id="prefix_invoice" name="prefix_invoice" type="text" class="mt-1 block w-full font-mono uppercase" :value="$settings->get('numbering')?->where('key', 'prefix_invoice')->first()->value ?? 'INV'" />
-                        </div>
-                        <div>
-                            <x-input-label for="prefix_quotation" :value="__('Quotation Prefix')" />
-                            <x-text-input id="prefix_quotation" name="prefix_quotation" type="text" class="mt-1 block w-full font-mono uppercase" :value="$settings->get('numbering')?->where('key', 'prefix_quotation')->first()->value ?? 'QTE'" />
-                        </div>
-                        <div>
-                            <x-input-label for="prefix_job" :value="__('Job Prefix')" />
-                            <x-text-input id="prefix_job" name="prefix_job" type="text" class="mt-1 block w-full font-mono uppercase" :value="$settings->get('numbering')?->where('key', 'prefix_job')->first()->value ?? 'JOB'" />
-                        </div>
-                        <div>
-                            <x-input-label for="prefix_certificate" :value="__('Certificate Prefix')" />
-                            <x-text-input id="prefix_certificate" name="prefix_certificate" type="text" class="mt-1 block w-full font-mono uppercase" :value="$settings->get('numbering')?->where('key', 'prefix_certificate')->first()->value ?? 'CERT'" />
-                        </div>
-                        <div>
-                             <x-input-label for="prefix_dispatch" :value="__('Dispatch Prefix')" />
-                             <x-text-input id="prefix_dispatch" name="prefix_dispatch" type="text" class="mt-1 block w-full font-mono uppercase" :value="$settings->get('numbering')?->where('key', 'prefix_dispatch')->first()->value ?? 'DN'" />
-                        </div>
-                        <div>
-                             <x-input-label for="prefix_purchase_order" :value="__('PO Prefix')" />
-                             <x-text-input id="prefix_purchase_order" name="prefix_purchase_order" type="text" class="mt-1 block w-full font-mono uppercase" :value="$settings->get('numbering')?->where('key', 'prefix_purchase_order')->first()->value ?? 'PO'" />
-                        </div>
-                        <div>
-                             <x-input-label for="prefix_inventory" :value="__('Inventory/SKU Prefix')" />
-                             <x-text-input id="prefix_inventory" name="prefix_inventory" type="text" class="mt-1 block w-full font-mono uppercase" :value="$settings->get('numbering')?->where('key', 'prefix_inventory')->first()->value ?? 'INV'" />
-                        </div>
+            <!-- Numbering Tab -->
+            <div x-show="activeTab === 'numbering'" class="theme-card space-y-6" style="display: none;">
+                <div class="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Document Code & Numbering Formats</h3>
+                    <span class="text-xs text-slate-500">Auto-increment document prefixes</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+                    <div>
+                        <label class="theme-label mb-1.5">Invoice Prefix</label>
+                        <input type="text" name="prefix_invoice" value="{{ $settings->get('numbering')?->where('key', 'prefix_invoice')->first()->value ?? 'INV' }}" class="theme-input text-xs font-mono uppercase font-bold">
+                    </div>
+
+                    <div>
+                        <label class="theme-label mb-1.5">Quotation Prefix</label>
+                        <input type="text" name="prefix_quotation" value="{{ $settings->get('numbering')?->where('key', 'prefix_quotation')->first()->value ?? 'QTE' }}" class="theme-input text-xs font-mono uppercase font-bold">
+                    </div>
+
+                    <div>
+                        <label class="theme-label mb-1.5">Job Prefix</label>
+                        <input type="text" name="prefix_job" value="{{ $settings->get('numbering')?->where('key', 'prefix_job')->first()->value ?? 'JOB' }}" class="theme-input text-xs font-mono uppercase font-bold">
+                    </div>
+
+                    <div>
+                        <label class="theme-label mb-1.5">Certificate Prefix</label>
+                        <input type="text" name="prefix_certificate" value="{{ $settings->get('numbering')?->where('key', 'prefix_certificate')->first()->value ?? 'CERT' }}" class="theme-input text-xs font-mono uppercase font-bold">
+                    </div>
+
+                    <div>
+                        <label class="theme-label mb-1.5">Dispatch Note Prefix</label>
+                        <input type="text" name="prefix_dispatch" value="{{ $settings->get('numbering')?->where('key', 'prefix_dispatch')->first()->value ?? 'DN' }}" class="theme-input text-xs font-mono uppercase font-bold">
+                    </div>
+
+                    <div>
+                        <label class="theme-label mb-1.5">Purchase Order Prefix</label>
+                        <input type="text" name="prefix_purchase_order" value="{{ $settings->get('numbering')?->where('key', 'prefix_purchase_order')->first()->value ?? 'PO' }}" class="theme-input text-xs font-mono uppercase font-bold">
+                    </div>
+
+                    <div>
+                        <label class="theme-label mb-1.5">SKU / Item Prefix</label>
+                        <input type="text" name="prefix_inventory" value="{{ $settings->get('numbering')?->where('key', 'prefix_inventory')->first()->value ?? 'INV' }}" class="theme-input text-xs font-mono uppercase font-bold">
                     </div>
                 </div>
+            </div>
 
-                <!-- Security Tab -->
-                 <div x-show="activeTab === 'security'" class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-6 space-y-6" style="display: none;">
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white border-b dark:border-gray-700 pb-2">System Security</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <x-input-label for="security_session_lifetime" :value="__('Session Timeout (Minutes)')" />
-                            <x-text-input id="security_session_lifetime" name="security_session_lifetime" type="number" class="mt-1 block w-full" :value="$settings->get('security')?->where('key', 'security_session_lifetime')->first()->value ?? '120'" />
-                        </div>
-                        <div>
-                            <label class="inline-flex items-center mt-8">
-                                <input type="hidden" name="security_maintenance_mode" value="0">
-                                <input type="checkbox" name="security_maintenance_mode" value="1" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" {{ ($settings->get('security')?->where('key', 'security_maintenance_mode')->first()->value ?? '0') == '1' ? 'checked' : '' }}>
-                                <span class="ml-2 text-red-600 font-bold">Enable Maintenance Mode</span>
-                            </label>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 ml-6">Only admins will be able to access the system.</p>
-                        </div>
+            <!-- Security Tab -->
+            <div x-show="activeTab === 'security'" class="theme-card space-y-6" style="display: none;">
+                <div class="pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">System Security & Maintenance</h3>
+                    <span class="text-xs text-slate-500">Session limits and system access modes</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="theme-label mb-1.5">Session Timeout (Minutes)</label>
+                        <input type="number" name="security_session_lifetime" value="{{ $settings->get('security')?->where('key', 'security_session_lifetime')->first()->value ?? '120' }}" class="theme-input text-xs font-mono">
+                    </div>
+
+                    <div class="pt-2">
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                            <input type="hidden" name="security_maintenance_mode" value="0">
+                            <input type="checkbox" name="security_maintenance_mode" value="1" class="rounded text-rose-600 focus:ring-rose-500" {{ ($settings->get('security')?->where('key', 'security_maintenance_mode')->first()->value ?? '0') == '1' ? 'checked' : '' }}>
+                            <span class="text-xs font-bold text-rose-600 dark:text-rose-400">Enable Maintenance Mode</span>
+                        </label>
+                        <p class="text-[11px] text-slate-500 mt-1">When enabled, only administrators will be able to log into the ERP system.</p>
                     </div>
                 </div>
+            </div>
 
-                <!-- Save Action -->
-                <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-lg mt-6">
-                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
-                        Save Changes
-                    </button>
-                </div>
+            <!-- Fixed Bottom Action Bar -->
+            <div class="mt-6 flex items-center justify-end gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg">
+                <button type="submit" class="btn-primary text-xs font-bold gap-2 px-6 py-2.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span>Save All Changes</span>
+                </button>
+            </div>
 
-            </form>
-        </div>
+        </form>
     </div>
 </x-app-layout>

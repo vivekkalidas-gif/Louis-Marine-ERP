@@ -12,7 +12,7 @@
                 <!-- Create Modal -->
                 <div x-show="open" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
                     <div class="flex items-center justify-center min-h-screen px-4 text-center">
-                        <div class="fixed inset-0 transition-opacity bg-gray-50 dark:bg-gray-7000 bg-opacity-75" @click="open = false"></div>
+                        <div class="fixed inset-0 transition-opacity bg-gray-50 dark:bg-gray-700 bg-opacity-75" @click="open = false"></div>
                         <div class="inline-block w-full max-w-lg p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 shadow-xl rounded-2xl">
                             <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">Record Income</h3>
                             <form action="{{ route('admin.finance.incomes.store') }}" method="POST" class="mt-4">
@@ -132,7 +132,7 @@
                                         @if(!$income->reference_type)
                                         <div x-show="editOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
                                             <div class="flex items-center justify-center min-h-screen px-4 text-center">
-                                                <div class="fixed inset-0 transition-opacity bg-gray-50 dark:bg-gray-7000 bg-opacity-75" @click="editOpen = false"></div>
+                                                <div class="fixed inset-0 transition-opacity bg-gray-50 dark:bg-gray-700 bg-opacity-75" @click="editOpen = false"></div>
                                                 <div class="inline-block w-full max-w-lg p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 shadow-xl rounded-2xl">
                                                     <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">Edit Income</h3>
                                                     <form action="{{ route('admin.finance.incomes.update', $income) }}" method="POST" class="mt-4">

@@ -24,7 +24,7 @@
                  <!-- Logo -->
                 <div class="text-center mb-8">
                      @if(config('settings.company_logo'))
-                        <img src="{{ asset(config('settings.company_logo')) }}" alt="Logo" class="h-24 w-auto mx-auto drop-shadow-md">
+                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url(config('settings.company_logo')) }}" alt="Logo" class="h-24 w-auto mx-auto drop-shadow-md">
                     @else
                         <h2 class="text-3xl font-bold text-[#0b1c3c] dark:text-white uppercase tracking-widest">{{ config('settings.company_name', 'Louis Marine') }}</h2>
                     @endif

@@ -1,17 +1,35 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                {{ $job->job_number }} - {{ $job->customer->company_name }}
-            </h2>
-            <div class="flex space-x-2">
-                 {{-- Status Badge --}}
-                 <span class="px-3 py-1 rounded-full text-sm font-bold
-                    {{ $job->status === 'Open' ? 'bg-blue-100 text-blue-800' : '' }}
-                    {{ $job->status === 'Assigned' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                    {{ $job->status === 'Completed' ? 'bg-green-100 text-green-800' : '' }}">
-                    {{ $job->status }}
-                </span>
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2 text-xs text-brand-600 dark:text-brand-400 font-semibold mb-1">
+                    <a href="{{ route('admin.jobs.index') }}" class="hover:underline">Service Jobs</a>
+                    <span>/</span>
+                    <span class="text-slate-500 dark:text-slate-400">Job Details</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <h2 class="font-black text-2xl text-slate-900 dark:text-white leading-tight tracking-tight">
+                        {{ $job->job_number }} - {{ $job->customer->company_name ?? 'N/A' }}
+                    </h2>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold
+                        {{ $job->status === 'Completed' || $job->status === 'completed' ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/60' : '' }}
+                        {{ $job->status === 'Assigned' || $job->status === 'assigned' ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60' : '' }}
+                        {{ $job->status === 'Open' || $job->status === 'open' ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-800/60' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700' }}">
+                        <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                        {{ ucfirst($job->status) }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                 <a href="{{ route('admin.jobs.pdf', $job->id) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    <span>View PDF</span>
+                 </a>
+                 <a href="{{ route('admin.jobs.pdf', [$job->id, 'download' => 1]) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold text-xs rounded-xl shadow-xs transition-all">
+                    <svg class="w-4 h-4 text-brand-500 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 01-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>Download PDF</span>
+                 </a>
             </div>
         </div>
     </x-slot>

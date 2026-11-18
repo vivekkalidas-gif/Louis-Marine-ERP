@@ -45,8 +45,7 @@ class WorkshopTool extends Model
     {
         return $this->hasOne(ToolRequest::class, 'workshop_tool_id')
             ->whereNull('returned_at')
-            ->whereNull('rejected_at')
-            ->whereIn('status', ['issued', 'pending']);
+            ->whereIn('status', ['issued', 'pending', 'approved']);
     }
 
     // Assignee helper

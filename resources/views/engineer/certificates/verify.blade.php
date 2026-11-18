@@ -78,7 +78,7 @@
                 @if(auth()->user()->signature_path)
                     <div class="mb-4">
                         <p class="text-xs text-green-600 mb-1">Your Signature:</p>
-                        <img src="{{ asset('storage/'.auth()->user()->signature_path) }}" alt="Signature" class="h-12 border border-green-200 bg-white dark:bg-gray-800 p-1">
+                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url(auth()->user()->signature_path) }}" alt="Signature" class="h-12 border border-green-200 bg-white dark:bg-gray-800 p-1">
                     </div>
                     <form action="{{ route('engineer.certificates.approve', $certificate->id) }}" method="POST">
                         @csrf

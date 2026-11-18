@@ -35,22 +35,49 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Load Global Settings
-        if (\Illuminate\Support\Facades\Schema::hasTable('settings')) {
-            $settings = \App\Models\Setting::getAllCached();
-            view()->share('globalSettings', $settings);
-            
-            // Hydrate config for global access (e.g. config('settings.company_name'))
-            config(['settings' => $settings->toArray()]);
+        // Load Global Settings
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('settings')) {
+                $settings = \App\Models\Setting::getAllCached();
+                view()->share('globalSettings', $settings);
+                
+                // Hydrate config for global access (e.g. config('settings.company_name'))
+                config(['settings' => $settings->toArray()]);
 
-            if (!empty($settings['mail_host'])) {
-                config([
-                    'mail.mailers.smtp.host' => $settings['mail_host'],
-                    'mail.mailers.smtp.port' => $settings['mail_port'],
-                    'mail.mailers.smtp.username' => $settings['mail_username'],
-                    'mail.mailers.smtp.password' => $settings['mail_password'],
-                    'mail.mailers.smtp.encryption' => $settings['mail_encryption'],
+                if (!empty($settings['mail_host'])) {
+                    config([
+                        'mail.mailers.smtp.host' => $settings['mail_host'],
+                        'mail.mailers.smtp.port' => $settings['mail_port'],
+                        'mail.mailers.smtp.username' => $settings['mail_username'],
+                        'mail.mailers.smtp.password' => $settings['mail_password'],
+                        'mail.mailers.smtp.encryption' => $settings['mail_encryption'],
+                    ]);
+                }
+
+                // Hydrate Google Drive Config (DEBUGGING ENABLED)
+                \Illuminate\Support\Facades\Log::info('AppServiceProvider: Hydrating Google Drive Config');
+                \Illuminate\Support\Facades\Log::info('Settings Found:', [
+                    'client_id_exists' => isset($settings['google_drive_client_id']),
+                    'refresh_token_exists' => isset($settings['google_drive_refresh_token']),
+                    'refresh_token_preview' => substr($settings['google_drive_refresh_token'] ?? '', 0, 5) . '...' // Log only start for security
                 ]);
+
+                if (!empty($settings['google_drive_refresh_token'])) {
+                    config([
+                        'filesystems.disks.google.clientId' => $settings['google_drive_client_id'] ?? '',
+                        'filesystems.disks.google.clientSecret' => $settings['google_drive_client_secret'] ?? '',
+                        'filesystems.disks.google.refreshToken' => $settings['google_drive_refresh_token'],
+                        'filesystems.disks.google.folder' => $settings['google_drive_folder_id'] ?? '/',
+                    ]);
+                    \Illuminate\Support\Facades\Log::info('AppServiceProvider: Config updated successfully.');
+                } else {
+                    \Illuminate\Support\Facades\Log::warning('AppServiceProvider: Refresh Token is empty or missing in settings.');
+                }
             }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('AppServiceProvider Error: ' . $e->getMessage());
+            // Database not ready or connection failed. 
+            // Silently fail so the installer can run.
         }
 
         // Login Logging
@@ -89,10 +116,47 @@ class AppServiceProvider extends ServiceProvider
                 $options['teamDriveId'] = $config['teamDriveId'];
             }
         
+            // Fail-safe: Fetch from DB if config is missing (JIT Configuration)
+            $clientId = $config['clientId'];
+            $clientSecret = $config['clientSecret'];
+            $refreshToken = $config['refreshToken'];
+
+            if (empty($refreshToken)) {
+                // Try to get directly from DB
+                try {
+                     $dbSettings = \App\Models\Setting::whereIn('key', [
+                        'google_drive_client_id', 
+                        'google_drive_client_secret', 
+                        'google_drive_refresh_token',
+                        'google_drive_folder_id'
+                    ])->pluck('value', 'key');
+
+                    $clientId = $dbSettings['google_drive_client_id'] ?? $clientId;
+                    $clientSecret = $dbSettings['google_drive_client_secret'] ?? $clientSecret;
+                    $refreshToken = $dbSettings['google_drive_refresh_token'] ?? $refreshToken;
+                    $config['folder'] = $dbSettings['google_drive_folder_id'] ?? ($config['folder'] ?? '/');
+
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Google Driver JIT Config Failed: ' . $e->getMessage());
+                }
+            }
+
+            if (empty($clientId) || empty($clientSecret) || empty($refreshToken)) {
+                throw new \Exception("GOOGLE DRIVE SETUP ERROR: Missing Credentials! 
+                Please go to Admin -> Settings -> Cloud Backups and ensure all fields are saved.
+                Debug Info:
+                Client ID: " . ($clientId ? 'SET' : 'MISSING') . "
+                Client Secret: " . ($clientSecret ? 'SET' : 'MISSING') . "
+                Refresh Token: " . ($refreshToken ? 'SET' : 'MISSING') . "
+                DB Lookup: " . (isset($dbSettings) ? 'Attempted' : 'Not Attempted') . "
+                ");
+            }
+
             $client = new \Google\Client();
-            $client->setClientId($config['clientId']);
-            $client->setClientSecret($config['clientSecret']);
-            $client->refreshToken($config['refreshToken']);
+            $client->setClientId($clientId);
+            $client->setClientSecret($clientSecret);
+            $client->refreshToken($refreshToken);
+            $client->addScope(\Google\Service\Drive::DRIVE);
             
             $service = new \Google\Service\Drive($client);
             $adapter = new \Masbug\Flysystem\GoogleDriveAdapter($service, $config['folder'] ?? '/', $options);

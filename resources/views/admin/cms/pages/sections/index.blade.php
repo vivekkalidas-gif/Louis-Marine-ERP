@@ -89,7 +89,7 @@
                                                     </div>
                                                     <div>
                                                         @if($section->image_path)
-                                                            <img src="{{ asset('storage/' . $section->image_path) }}" class="h-20 w-auto object-cover rounded mb-2">
+                                                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($section->image_path) }}" class="h-20 w-auto object-cover rounded mb-2">
                                                         @endif
                                                         <input type="file" name="image" class="text-sm">
                                                     </div>

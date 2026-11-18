@@ -12,13 +12,12 @@ class EquipmentCategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $categories = EquipmentCategory::withCount('templates')
+        $categories = EquipmentCategory::withCount(['templates', 'certificateTemplates'])
             ->ordered()
             ->get();
         
-        // Fetch items for the second tab (Only Templates)
-        $query = EquipmentItem::with('category')
-            ->where('record_type', 'template');
+        // Fetch items for the second tab
+        $query = EquipmentItem::with('category');
 
         if ($request->has('category_id') && $request->category_id) {
             $query->where('category_id', $request->category_id);
@@ -31,6 +30,8 @@ class EquipmentCategoryController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge(['is_active' => $request->has('is_active')]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:100|unique:equipment_categories,name',
             'description' => 'nullable|string',
@@ -40,7 +41,6 @@ class EquipmentCategoryController extends Controller
         ]);
 
         $validated['slug'] = Str::slug($validated['name']);
-        $validated['is_active'] = $request->has('is_active');
 
         EquipmentCategory::create($validated);
 
@@ -50,6 +50,8 @@ class EquipmentCategoryController extends Controller
 
     public function update(Request $request, EquipmentCategory $category)
     {
+        $request->merge(['is_active' => $request->has('is_active')]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:100|unique:equipment_categories,name,' . $category->id,
             'description' => 'nullable|string',
@@ -59,7 +61,6 @@ class EquipmentCategoryController extends Controller
         ]);
 
         $validated['slug'] = Str::slug($validated['name']);
-        $validated['is_active'] = $request->has('is_active');
 
         $category->update($validated);
 

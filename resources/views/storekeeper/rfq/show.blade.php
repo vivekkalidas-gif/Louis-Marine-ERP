@@ -184,7 +184,7 @@
     <!-- Add Quote Modal -->
     <div id="addQuoteModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 bg-gray-50 dark:bg-gray-7000 bg-opacity-75 transition-opacity" onclick="document.getElementById('addQuoteModal').classList.add('hidden')"></div>
+            <div class="fixed inset-0 bg-gray-50 dark:bg-gray-700 bg-opacity-75 transition-opacity" onclick="document.getElementById('addQuoteModal').classList.add('hidden')"></div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
             <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                 <form action="{{ route('storekeeper.rfq.quotations.store', $rfq) }}" method="POST">

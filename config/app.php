@@ -16,6 +16,12 @@ return [
     'name' => env('APP_NAME', 'Laravel'),
 
     /*
+    | Certificate-only mode: when true, the app is reduced to login +
+    | certificate management (see App\Http\Middleware\CertificateOnlyMode).
+    */
+    'certificate_only' => (bool) env('CERTIFICATE_ONLY', false),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------

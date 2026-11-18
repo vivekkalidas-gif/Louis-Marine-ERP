@@ -52,7 +52,11 @@
                 <!-- Logo -->
                 <div class="flex-shrink-0">
                     <a href="{{ route('home') }}">
-                        <img class="h-16 w-auto" src="https://louismarineqatar.com/wp-content/uploads/2024/11/logo.jpg" alt="Louis Marine Qatar">
+                        @if(isset($globalSettings['company_logo']) && !empty($globalSettings['company_logo']))
+                            <img class="h-16 w-auto" src="{{ url('storage/' . $globalSettings['company_logo']) }}" alt="{{ $globalSettings['company_name'] ?? 'Louis Marine Qatar' }}">
+                        @else
+                            <img class="h-16 w-auto" src="{{ asset('images/logo.jpg') }}" alt="Louis Marine Qatar">
+                        @endif
                     </a>
                 </div>
                 
@@ -105,7 +109,11 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
                 <!-- Footer 1 -->
                 <div>
-                    <img class="h-12 w-auto mb-6 bg-white dark:bg-gray-800 p-2 rounded" src="https://louismarineqatar.com/wp-content/uploads/2024/11/logo.jpg" alt="Louis Marine">
+                    @if(isset($globalSettings['company_logo']) && !empty($globalSettings['company_logo']))
+                        <img class="h-12 w-auto mb-6 bg-white dark:bg-gray-800 p-2 rounded" src="{{ url('storage/' . $globalSettings['company_logo']) }}" alt="{{ $globalSettings['company_name'] ?? 'Louis Marine Qatar' }}">
+                    @else
+                        <img class="h-12 w-auto mb-6 bg-white dark:bg-gray-800 p-2 rounded" src="{{ asset('images/logo.jpg') }}" alt="Louis Marine">
+                    @endif
                     <p class="text-gray-400 text-sm leading-relaxed mb-6">
                         We are one of the leading stockist for marine safety, survival and fire fighting equipment in Qatar since 1999.
                     </p>

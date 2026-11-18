@@ -1,15 +1,23 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Create Service Report') }} - {{ $job->job_number }}
-        </h2>
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h2 class="font-black text-xl text-slate-900 dark:text-white leading-tight tracking-tight">
+                    {{ __('Create Field Service Report') }} - {{ $job->job_number }}
+                </h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Record service activities, observations, customer sign-off, and materials used</p>
+            </div>
+            <a href="{{ route('engineer.jobs.show', $job->id) }}" class="btn-ghost text-xs">
+                Back to Job Details
+            </a>
+        </div>
     </x-slot>
 
     <script>
         window.initialJobGroups = @json($prefilledGroups ?? []);
     </script>
 
-    <div class="py-12" x-data="{
+    <div class="py-6 space-y-6" x-data="{
         service_groups: window.initialJobGroups,
         charges: [],
         
@@ -61,258 +69,226 @@
             this.technicians.splice(index, 1);
         }
     }">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto space-y-6">
             <form method="POST" action="{{ route('engineer.jobs.report.store', $job->id) }}">
                 @csrf
                 
-                <!-- Job Summary -->
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                    <div class="p-6">
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center mb-4">
-                            <svg class="h-6 w-6 mr-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                            </svg>
-                            Job Details
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div>
-                                <label class="text-xs text-gray-500 dark:text-gray-400 uppercase">Customer</label>
-                                <p class="font-semibold text-gray-900 dark:text-gray-200">{{ $job->customer->company_name }}</p>
-                            </div>
-                            <div>
-                                <label class="text-xs text-gray-500 dark:text-gray-400 uppercase">Vessel</label>
-                                <p class="font-semibold text-gray-900 dark:text-gray-200">{{ $job->vessel->name ?? 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <label class="text-xs text-gray-500 dark:text-gray-400 uppercase">Date</label>
-                                <input type="date" name="report_date" value="{{ date('Y-m-d') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-gray-300" required>
-                            </div>
+                <!-- Job Summary Header Card -->
+                <div class="theme-card">
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4 pb-2 border-b border-slate-200 dark:border-slate-700/80">
+                        <svg class="h-5 w-5 text-brand-600 dark:text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                        <span>Field Service Order Details</span>
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div>
+                            <label class="theme-label">Customer Company</label>
+                            <p class="font-bold text-slate-900 dark:text-white text-sm">{{ $job->customer->company_name }}</p>
+                        </div>
+                        <div>
+                            <label class="theme-label">Vessel Name</label>
+                            <p class="font-bold text-slate-900 dark:text-white text-sm">{{ $job->vessel->name ?? 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <label class="theme-label">Service Report Date</label>
+                            <input type="date" name="report_date" value="{{ date('Y-m-d') }}" class="theme-input text-xs py-2" required>
                         </div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     
-                    <!-- Left Column: Services & Notes -->
+                    <!-- Left Column: Services & Description -->
                     <div class="lg:col-span-2 space-y-6">
                         
-                        <!-- 1. Services Performed (Grouped) -->
-                        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                            <div class="p-6">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Services Performed</h3>
-                                    <button type="button" @click="addServiceGroup()" class="text-sm bg-indigo-100 text-indigo-700 py-1 px-3 rounded hover:bg-indigo-200">
-                                        + Add Additional Service Group
-                                    </button>
-                                </div>
-                                
-                                <div class="space-y-6">
-                                    <template x-for="(group, groupIndex) in service_groups" :key="groupIndex">
-                                        <div class="p-4 border dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700 relative">
-                                            <!-- Remove Group Button -->
-                                            <button type="button" @click="removeServiceGroup(groupIndex)" class="absolute top-2 right-2 text-red-500 hover:text-red-700 text-xs font-bold uppercase">
-                                                Remove Group
-                                            </button>
-                                            
-                                            <!-- Service Type Select -->
-                                            <div class="mb-4 pr-16 dark:text-gray-200">
-                                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Service Activity</label>
-                                                <select :name="'service_groups['+groupIndex+'][service_type_id]'" x-model="group.service_type_id" class="text-sm rounded border-gray-300 w-full dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:border-indigo-500 focus:ring-indigo-500" required>
-                                                    <option value="">-- Select Service Type (e.g., Refilling, Hydrotest) --</option>
-                                                    @foreach($serviceTypes as $service)
-                                                        <option value="{{ $service->id }}">{{ $service->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
+                        <!-- 1. Services Performed -->
+                        <div class="theme-card">
+                            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200 dark:border-slate-700/80">
+                                <h3 class="text-base font-bold text-slate-900 dark:text-white">Services Performed</h3>
+                                <button type="button" @click="addServiceGroup()" class="btn-secondary text-xs">
+                                    + Add Additional Service Group
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-5">
+                                <template x-for="(group, groupIndex) in service_groups" :key="groupIndex">
+                                    <div class="p-4 border border-slate-200 dark:border-slate-700/80 rounded-xl bg-slate-50/50 dark:bg-slate-900/40 relative">
+                                        <!-- Remove Group Button -->
+                                        <button type="button" @click="removeServiceGroup(groupIndex)" class="absolute top-3 right-3 text-rose-600 dark:text-rose-400 hover:text-rose-700 text-xs font-bold uppercase">
+                                            Remove Group
+                                        </button>
+                                        
+                                        <!-- Service Type Select -->
+                                        <div class="mb-4 pr-24">
+                                            <label class="theme-label">Service Activity Type</label>
+                                            <select :name="'service_groups['+groupIndex+'][service_type_id]'" x-model="group.service_type_id" class="theme-input text-xs py-2" required>
+                                                <option value="">-- Select Service Type (e.g., Refilling, Hydrotest) --</option>
+                                                @foreach($serviceTypes as $service)
+                                                    <option value="{{ $service->id }}">{{ $service->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
 
-                                            <!-- Inner Items List -->
-                                            <div class="space-y-3 bg-white dark:bg-gray-800 p-3 rounded border dark:border-gray-600">
-                                                <template x-for="(item, itemIndex) in group.items" :key="itemIndex">
-                                                    <div class="flex items-start gap-2">
-                                                        <div class="flex-grow">
-                                                            <label class="block text-xs text-gray-400 mb-1" x-show="itemIndex === 0">Item / Quantity</label>
-                                                            <div class="flex gap-2">
-                                                                <!-- Job Item Select (Populates Description) -->
-                                                                @if($job->items->count() > 0 || $job->equipment->count() > 0)
-                                                                    <div class="flex-grow">
-                                                                        <select :name="'service_groups['+groupIndex+'][items]['+itemIndex+'][description]'" x-model="item.description" class="text-sm rounded border-gray-300 w-full dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300" required>
-                                                                            <option value="">-- Select Item --</option>
-                                                                             <!-- Equipment (Master) -->
-                                                                            @foreach($job->equipment as $equip)
-                                                                                <option value="{{ $equip->equipmentItem->name ?? 'Item' }}">
-                                                                                    {{ $equip->equipmentItem->name ?? 'Unknown' }} (Ref Qty: {{ $equip->quantity }})
-                                                                                </option>
-                                                                            @endforeach
+                                        <!-- Inner Items List -->
+                                        <div class="space-y-3 bg-white dark:bg-slate-800 p-3.5 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                                            <template x-for="(item, itemIndex) in group.items" :key="itemIndex">
+                                                <div class="flex items-start gap-2">
+                                                    <div class="flex-grow">
+                                                        <label class="theme-label mb-1" x-show="itemIndex === 0">Equipment / Item Description</label>
+                                                        <div class="flex gap-2">
+                                                            @if($job->items->count() > 0 || $job->equipment->count() > 0)
+                                                                <div class="flex-grow">
+                                                                    <select :name="'service_groups['+groupIndex+'][items]['+itemIndex+'][description]'" x-model="item.description" class="theme-input text-xs py-2" required>
+                                                                        <option value="">-- Select Equipment Item --</option>
+                                                                        @foreach($job->equipment as $equip)
+                                                                            <option value="{{ $equip->equipmentItem->name ?? 'Item' }}">
+                                                                                {{ $equip->equipmentItem->name ?? 'Unknown' }} (Ref Qty: {{ $equip->quantity }})
+                                                                            </option>
+                                                                        @endforeach
 
-                                                                            <!-- Custom Items -->
-                                                                            @foreach($job->items as $jItem)
-                                                                                <option value="{{ $jItem->name }}">
-                                                                                    {{ $jItem->name }} (Ref Qty: {{ $jItem->quantity }})
-                                                                                </option>
-                                                                            @endforeach
-                                                                        </select>
-                                                                    </div>
-                                                                @else
-                                                                    <input type="text" :name="'service_groups['+groupIndex+'][items]['+itemIndex+'][description]'" x-model="item.description" placeholder="Item Name..." class="flex-grow text-sm rounded border-gray-300 dark:bg-gray-700 dark:text-white" required>
-                                                                @endif
-                                                                
-                                                                <!-- Quantity Input -->
-                                                                <div class="w-20">
-                                                                     <input type="number" :name="'service_groups['+groupIndex+'][items]['+itemIndex+'][quantity]'" x-model="item.quantity" min="1" placeholder="Qty" class="text-sm rounded border-gray-300 w-full dark:bg-gray-700 dark:text-white" required>
+                                                                        @foreach($job->items as $jItem)
+                                                                            <option value="{{ $jItem->name }}">
+                                                                                {{ $jItem->name }} (Ref Qty: {{ $jItem->quantity }})
+                                                                            </option>
+                                                                        @endforeach
+                                                                    </select>
                                                                 </div>
+                                                            @else
+                                                                <input type="text" :name="'service_groups['+groupIndex+'][items]['+itemIndex+'][description]'" x-model="item.description" placeholder="Item Name..." class="theme-input text-xs py-2 flex-grow" required>
+                                                            @endif
+                                                            
+                                                            <div class="w-24">
+                                                                 <input type="number" :name="'service_groups['+groupIndex+'][items]['+itemIndex+'][quantity]'" x-model="item.quantity" min="1" placeholder="Qty" class="theme-input text-xs py-2" required>
                                                             </div>
                                                         </div>
-
-                                                        <!-- Remove Item Button -->
-                                                        <button type="button" @click="removeItemFromGroup(groupIndex, itemIndex)" class="mt-6 text-red-400 hover:text-red-600">
-                                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                                        </button>
                                                     </div>
-                                                </template>
 
-                                                <!-- Add Item Button -->
-                                                <button type="button" @click="addItemToGroup(groupIndex)" class="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center">
-                                                    <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                                    Add Item to this Service
-                                                </button>
-                                            </div>
+                                                    <button type="button" @click="removeItemFromGroup(groupIndex, itemIndex)" class="mt-6 text-rose-500 hover:text-rose-700">
+                                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                    </button>
+                                                </div>
+                                            </template>
+
+                                            <button type="button" @click="addItemToGroup(groupIndex)" class="mt-2 text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center">
+                                                <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                                <span>Add Item to this Service Activity</span>
+                                            </button>
                                         </div>
-                                    </template>
-                                    
-                                    <!-- Empty State / Initial Prompt -->
-                                    <div x-show="service_groups.length === 0" class="text-center py-8 bg-gray-50 dark:bg-gray-900 border-2 border-dashed border-gray-300 rounded-lg">
-                                        <p class="text-gray-500 dark:text-gray-400 mb-2">No service activities added yet.</p>
-                                        <button type="button" @click="addServiceGroup()" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 shadow font-semibold">
-                                            Start Adding Services
-                                        </button>
                                     </div>
+                                </template>
+                                
+                                <div x-show="service_groups.length === 0" class="text-center py-8 bg-slate-50 dark:bg-slate-900/60 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">No service activities added yet.</p>
+                                    <button type="button" @click="addServiceGroup()" class="btn-primary text-xs">
+                                        Start Adding Services
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 2. Work Description -->
-                        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                            <div class="p-6">
-                                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Work Description & Notes</h3>
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Work Done / Observations</label>
-                                        <textarea name="work_description" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-gray-300" required placeholder="Describe the work carried out..."></textarea>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Recommendations</label>
-                                        <textarea name="recommendations" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:text-gray-300" placeholder="Any further actions required..."></textarea>
-                                    </div>
+                        <!-- 2. Work Description & Recommendations -->
+                        <div class="theme-card">
+                            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-4 pb-2 border-b border-slate-200 dark:border-slate-700/80">Work Description & Observations</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="theme-label">Work Done & Field Observations</label>
+                                    <textarea name="work_description" rows="4" class="theme-input text-xs" required placeholder="Describe the inspection and servicing carried out..."></textarea>
+                                </div>
+                                <div>
+                                    <label class="theme-label">Engineer Recommendations</label>
+                                    <textarea name="recommendations" rows="3" class="theme-input text-xs" placeholder="Any further maintenance or replacement required..."></textarea>
                                 </div>
                             </div>
                         </div>
 
                     </div>
 
-                    <!-- Right Column: Charges & Summary -->
+                    <!-- Right Column: Materials & Hours -->
                     <div class="space-y-6">
                         
-                        <!-- 3. Additional Charges (Parts) -->
-                        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                            <div class="p-6">
-                                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Materials / Spares Used</h3>
-                                
-                                <!-- From Stock -->
-                                @if($job->materials && $job->materials->count() > 0)
-                                <div class="mb-6">
-                                    <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">From Stock (Approved/Issued)</h4>
-                                    <div class="space-y-2">
-                                        @foreach($job->materials as $material)
-                                        <label class="flex items-center p-3 border rounded-md bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer">
-                                            <input type="checkbox" 
-                                                   name="stock_materials[]" 
-                                                   value="{{ $material->id }}" 
-                                                   class="rounded text-blue-600 mr-3"
-                                                   checked>
-                                            <div class="flex-1 grid grid-cols-2 gap-4">
-                                                <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $material->item_name }}</span>
-                                                <span class="text-sm text-gray-600 dark:text-gray-400">Qty: {{ $material->quantity }} | Status: {{ $material->status }}</span>
-                                            </div>
-                                        </label>
-                                        @endforeach
-                                    </div>
-                                </div>
-                                @endif
-
-                                <!-- Manual Entry -->
-                                <div>
-                                    <div class="flex justify-between items-center mb-3">
-                                        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Additional Materials (Manual Entry)</h4>
-                                        <button type="button" @click="addCharge()" class="text-sm bg-indigo-100 text-indigo-700 py-1 px-3 rounded hover:bg-indigo-200">
-                                            + Add Item
-                                        </button>
-                                    </div>
-                                    
-                                    <div class="space-y-4">
-                                        <template x-for="(charge, index) in charges" :key="index">
-                                            <div class="p-3 border rounded-md bg-gray-50 dark:bg-gray-700 relative">
-                                                <button type="button" @click="removeCharge(index)" class="absolute top-2 right-2 text-red-500 hover:text-red-700">
-                                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                                </button>
-                                                
-                                                <div class="grid grid-cols-1 gap-2">
-                                                    <input type="text" :name="'manual_materials['+index+'][description]'" x-model="charge.description" placeholder="Item Name / Part" class="block w-full text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required>
-                                                    <div class="flex gap-2">
-                                                        <input type="number" :name="'manual_materials['+index+'][quantity]'" x-model="charge.quantity" min="1" placeholder="Qty" class="block w-20 text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required>
-                                                        <!-- Price is optional/hidden for Engineer -->
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </template>
-                                        <div x-show="charges.length === 0" class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
-                                            No additional materials added.
+                        <!-- Materials Used -->
+                        <div class="theme-card">
+                            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-4 pb-2 border-b border-slate-200 dark:border-slate-700/80">Spares & Stock Materials</h3>
+                            
+                            @if($job->materials && $job->materials->count() > 0)
+                            <div class="mb-6">
+                                <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Approved Stock Requisitions</h4>
+                                <div class="space-y-2">
+                                    @foreach($job->materials as $material)
+                                    <label class="flex items-center p-3 rounded-lg border border-slate-200 dark:border-slate-700/80 bg-slate-50/50 dark:bg-slate-900/40 cursor-pointer">
+                                        <input type="checkbox" name="stock_materials[]" value="{{ $material->id }}" class="rounded border-slate-300 text-brand-600 mr-3" checked>
+                                        <div class="flex-1 text-xs">
+                                            <span class="font-bold text-slate-900 dark:text-white block">{{ $material->item_name }}</span>
+                                            <span class="text-slate-500 dark:text-slate-400">Qty: {{ $material->quantity }}</span>
                                         </div>
-                                    </div>
+                                    </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @endif
+
+                            <div>
+                                <div class="flex justify-between items-center mb-3">
+                                    <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Additional Manual Parts</h4>
+                                    <button type="button" @click="addCharge()" class="btn-ghost text-xs">
+                                        + Add Part
+                                    </button>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <template x-for="(charge, index) in charges" :key="index">
+                                        <div class="p-3 border border-slate-200 dark:border-slate-700/80 rounded-lg bg-slate-50/50 dark:bg-slate-900/40 relative">
+                                            <button type="button" @click="removeCharge(index)" class="absolute top-2 right-2 text-rose-500 hover:text-rose-700">
+                                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                            
+                                            <div class="grid grid-cols-1 gap-2">
+                                                <input type="text" :name="'manual_materials['+index+'][description]'" x-model="charge.description" placeholder="Item Name / Part #" class="theme-input text-xs py-1.5" required>
+                                                <input type="number" :name="'manual_materials['+index+'][quantity]'" x-model="charge.quantity" min="1" placeholder="Qty" class="theme-input text-xs py-1.5 w-24" required>
+                                            </div>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 4. Technician Hours (Overtime) -->
-                        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                            <div class="p-6">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Technician Hours</h3>
-                                    <button type="button" @click="addTechnician()" class="text-sm bg-indigo-100 text-indigo-700 py-1 px-3 rounded hover:bg-indigo-200">
-                                        + Add Technician
-                                    </button>
-                                </div>
+                        <!-- Technician Hours & Submission -->
+                        <div class="theme-card">
+                            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200 dark:border-slate-700/80">
+                                <h3 class="text-base font-bold text-slate-900 dark:text-white">Technician Hours</h3>
+                                <button type="button" @click="addTechnician()" class="btn-ghost text-xs">
+                                    + Add Tech
+                                </button>
+                            </div>
 
-                                <div class="space-y-3">
-                                    <template x-for="(tech, index) in technicians" :key="index">
-                                        <div class="flex gap-2 items-start">
-                                            <div class="flex-grow">
-                                                <label class="block text-xs text-gray-400 mb-1" x-show="index === 0">Technician Name</label>
-                                                <select :name="'technicians['+index+'][user_id]'" x-model="tech.user_id" class="block w-full text-sm rounded-md border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
-                                                    <option value="">Select Technician</option>
-                                                    @foreach($employees as $emp)
-                                                        <option value="{{ $emp->id }}">{{ $emp->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="w-24">
-                                                <label class="block text-xs text-gray-400 mb-1" x-show="index === 0">Hours</label>
-                                                <input type="number" :name="'technicians['+index+'][hours]'" x-model="tech.hours" min="0.5" step="0.5" class="block w-full text-sm rounded-md border-gray-300 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required placeholder="Hrs">
-                                            </div>
-                                            <button type="button" @click="removeTechnician(index)" class="mt-6 text-red-400 hover:text-red-600">
-                                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                            </button>
+                            <div class="space-y-3">
+                                <template x-for="(tech, index) in technicians" :key="index">
+                                    <div class="flex gap-2 items-start">
+                                        <div class="flex-grow">
+                                            <label class="theme-label mb-1" x-show="index === 0">Technician Name</label>
+                                            <select :name="'technicians['+index+'][user_id]'" x-model="tech.user_id" class="theme-input text-xs py-2" required>
+                                                <option value="">Select Technician</option>
+                                                @foreach($employees as $emp)
+                                                    <option value="{{ $emp->id }}">{{ $emp->name }}</option>
+                                                @endforeach
+                                            </select>
                                         </div>
-                                    </template>
-                                </div>
-                                <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                                    <div class="bg-blue-50 text-blue-800 p-4 rounded-md text-sm mb-4">
-                                        <strong>Note:</strong> Logged hours will be automatically sent to Payroll for overtime calculation.
+                                        <div class="w-24">
+                                            <label class="theme-label mb-1" x-show="index === 0">Hours</label>
+                                            <input type="number" :name="'technicians['+index+'][hours]'" x-model="tech.hours" min="0.5" step="0.5" class="theme-input text-xs py-2" required placeholder="Hrs">
+                                        </div>
+                                        <button type="button" @click="removeTechnician(index)" class="mt-6 text-rose-500 hover:text-rose-700">
+                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
                                     </div>
+                                </template>
+                            </div>
 
-                                    <button type="submit" onclick="return confirm('Submit Service Report? This will mark the job as Completed.')" class="w-full bg-indigo-600 text-white px-4 py-3 rounded-lg font-bold hover:bg-indigo-700 shadow-lg transition transform hover:scale-105">
-                                        Submit Report & Complete Job
-                                    </button>
-                                </div>
+                            <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700/80">
+                                <button type="submit" onclick="return confirm('Submit Service Report? This will mark the job as Completed.')" class="btn-primary w-full text-center text-xs py-3 font-bold">
+                                    Submit Report & Complete Job
+                                </button>
                             </div>
                         </div>
 

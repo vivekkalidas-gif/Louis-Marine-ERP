@@ -38,4 +38,9 @@ class DispatchNote extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    public function serviceJob()
+    {
+        return $this->belongsTo(ServiceJob::class, 'service_job_id');
+    }
 }

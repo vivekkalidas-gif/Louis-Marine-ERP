@@ -35,9 +35,9 @@ class PaymentController extends Controller
         
         // If invoice is provided, we can prepopulate
         $invoices = Invoice::with('customer')
-            ->where('status', '!=', 'draft')
+            //->where('status', '!=', 'draft')
             ->where('status', '!=', 'cancelled')
-            ->whereRaw('total_amount > paid_amount') // Only unpaid/partial
+            ->whereRaw('total_amount > COALESCE(paid_amount, 0)') // Only unpaid/partial
             ->get();
 
         return view('accounts.payments.create', compact('invoice', 'invoices'));

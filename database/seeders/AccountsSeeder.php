@@ -41,7 +41,7 @@ class AccountsSeeder extends Seeder
         if (!$customer) {
             $customer = Customer::create([
                 'company_name' => 'Demo Customer',
-                'contact_person' => 'John Doe',
+
                 'email' => 'demo@example.com',
                 'phone' => '12345678',
                 'address' => 'Doha, Qatar'

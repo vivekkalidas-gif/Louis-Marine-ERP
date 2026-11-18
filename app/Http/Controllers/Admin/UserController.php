@@ -19,7 +19,7 @@ class UserController extends Controller
     public function index()
     {
         $this->authorize('viewAny', User::class);
-        $users = User::with(['roles', 'employeeDetail'])->latest()->paginate(10);
+        $users = User::with(['roles.permissions', 'employeeDetail'])->latest()->paginate(10);
         return view('admin.users.index', compact('users'));
     }
 

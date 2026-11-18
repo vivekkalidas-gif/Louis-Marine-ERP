@@ -12,6 +12,7 @@
     newMessage: '',
     currentUserId: '{{ auth()->id() }}',
     refreshInterval: null,
+    errorMessage: null,
     routes: {
         users: '{{ route('chat.users') }}',
         send: '{{ route('chat.send') }}',
@@ -88,21 +89,30 @@
     },
 
     fetchUsers(silent = false) {
-        if(!silent) this.isLoading = true;
+        if(!silent) {
+            this.isLoading = true;
+            this.errorMessage = null; 
+        }
+        
         fetch(this.routes.users, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json'
             }
         })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                return res.json();
+            })
             .then(data => {
                 this.users = data;
                 this.isLoading = false;
+                this.errorMessage = null;
             })
             .catch(err => {
                 console.error('Error fetching users:', err);
                 this.isLoading = false;
+                if(!silent) this.errorMessage = 'Failed to load users.';
             });
     },
 
@@ -258,6 +268,14 @@ style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: block
             <template x-if="isLoading && users.length === 0">
                  <div class="flex justify-center p-4 text-gray-500 dark:text-gray-400" style="text-align: center; color: #6b7280; padding: 1rem;">Loading users...</div>
             </template>
+            
+            <template x-if="errorMessage">
+                <div class="flex flex-col items-center justify-center p-4 text-red-500">
+                    <span x-text="errorMessage"></span>
+                    <button @click="fetchUsers()" class="mt-2 text-sm text-blue-600 hover:underline">Retry</button>
+                </div>
+            </template>
+
             <template x-for="user in users" :key="user.id">
                 <div @click="openChat(user)" class="p-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg cursor-pointer flex items-center transition justify-between" style="padding: 0.75rem; margin-bottom: 0.5rem; border-radius: 0.5rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
                      <div class="flex items-center">
@@ -277,7 +295,7 @@ style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: block
                      </div>
                 </div>
             </template>
-            <div x-show="users.length === 0 && !isLoading" class="text-center text-gray-500 dark:text-gray-400 mt-4" style="text-align: center; color: #6b7280; margin-top: 1rem;">No other users found.</div>
+            <div x-show="users.length === 0 && !isLoading && !errorMessage" class="text-center text-gray-500 dark:text-gray-400 mt-4" style="text-align: center; color: #6b7280; margin-top: 1rem;">No other users found.</div>
         </div>
 
         <!-- Chat View -->

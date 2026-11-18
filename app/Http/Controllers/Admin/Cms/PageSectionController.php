@@ -12,71 +12,76 @@ class PageSectionController extends Controller
 {
     public function index(CmsPage $page)
     {
-        $sections = $page->sections;
+        $sections = $page->sections()->orderBy('order')->get();
         return view('admin.cms.pages.sections.index', compact('page', 'sections'));
+    }
+
+    public function create(CmsPage $page)
+    {
+        return view('admin.cms.pages.sections.create', compact('page'));
     }
 
     public function store(Request $request, CmsPage $page)
     {
         $validated = $request->validate([
-            'section_key' => 'required|string|max:255',
-            'title' => 'nullable|string|max:255',
+            'title' => 'nullable|string',
+            'subtitle' => 'nullable|string',
             'content' => 'nullable|string',
-            'image' => 'nullable|image|max:2048',
+            'image_path' => 'nullable|image|max:2048',
             'order' => 'integer',
-            'is_visible' => 'boolean'
+            'section_key' => 'nullable|string',
+            'is_visible' => 'boolean',
         ]);
 
-        if ($request->hasFile('image')) {
-            $validated['image_path'] = $request->file('image')->store('cms/sections', 'public');
+        if ($request->hasFile('image_path')) {
+            $validated['image_path'] = $request->file('image_path')->store('cms/sections', 'public');
         }
+        
+        // Defaults
+        $validated['is_visible'] = $request->has('is_visible');
 
-        $page->sections()->create([
-            'section_key' => $validated['section_key'],
-            'title' => $validated['title'],
-            'content' => $validated['content'],
-            'image_path' => $validated['image_path'] ?? null,
-            'order' => $validated['order'] ?? 0,
-            'is_visible' => $request->has('is_visible'),
-        ]);
+        $page->sections()->create($validated);
 
-        return back()->with('success', 'Section added successfully.');
+        return redirect()->route('admin.cms.pages.sections.index', $page)->with('success', 'Section added successfully.');
     }
 
-    public function update(Request $request, PageSection $section)
+    public function edit(CmsPage $page, PageSection $section)
+    {
+        return view('admin.cms.pages.sections.edit', compact('page', 'section'));
+    }
+
+    public function update(Request $request, CmsPage $page, PageSection $section)
     {
         $validated = $request->validate([
-            'title' => 'nullable|string|max:255',
+            'title' => 'nullable|string',
+            'subtitle' => 'nullable|string',
             'content' => 'nullable|string',
-            'image' => 'nullable|image|max:2048',
+            'image_path' => 'nullable|image|max:2048',
             'order' => 'integer',
-            'is_visible' => 'boolean'
+            'section_key' => 'nullable|string',
+            'is_visible' => 'boolean',
         ]);
 
-        if ($request->hasFile('image')) {
+        if ($request->hasFile('image_path')) {
             if ($section->image_path) {
                 Storage::disk('public')->delete($section->image_path);
             }
-            $validated['image_path'] = $request->file('image')->store('cms/sections', 'public');
+            $validated['image_path'] = $request->file('image_path')->store('cms/sections', 'public');
         }
 
-        $section->update([
-            'title' => $validated['title'],
-            'content' => $validated['content'],
-            'image_path' => $validated['image_path'] ?? $section->image_path,
-            'order' => $validated['order'] ?? $section->order,
-            'is_visible' => $request->has('is_visible'),
-        ]);
+        $validated['is_visible'] = $request->has('is_visible');
 
-        return back()->with('success', 'Section updated successfully.');
+        $section->update($validated);
+
+        return redirect()->route('admin.cms.pages.sections.index', $page)->with('success', 'Section updated successfully.');
     }
 
-    public function destroy(PageSection $section)
+    public function destroy(CmsPage $page, PageSection $section)
     {
         if ($section->image_path) {
             Storage::disk('public')->delete($section->image_path);
         }
         $section->delete();
-        return back()->with('success', 'Section deleted successfully.');
+        return redirect()->route('admin.cms.pages.sections.index', $page)->with('success', 'Section removed.');
     }
 }

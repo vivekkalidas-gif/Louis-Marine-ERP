@@ -101,7 +101,7 @@
                                 <!-- Product Image Container -->
                                 <div class="product-image-container relative bg-gray-50 overflow-hidden" style="padding-bottom: 100%;">
                                     @if($product->image_path)
-                                        <img src="{{ Storage::url($product->image_path) }}" alt="{{ $product->name }}" class="absolute inset-0 w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-110">
+                                        <img src="{{ url('storage/' . $product->image_path) }}" alt="{{ $product->name }}" class="absolute inset-0 w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-110">
                                     @else
                                         <div class="absolute inset-0 flex items-center justify-center text-gray-300">
                                             <svg class="w-20 h-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>

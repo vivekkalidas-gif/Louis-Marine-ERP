@@ -27,6 +27,7 @@ class ToolRequest extends Model
 
     // Status Constants
     const STATUS_PENDING = 'pending';
+    const STATUS_APPROVED = 'approved';
     const STATUS_ISSUED = 'issued';
     const STATUS_RETURNED = 'returned';
     const STATUS_REJECTED = 'rejected';

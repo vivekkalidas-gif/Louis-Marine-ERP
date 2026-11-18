@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('quote_request_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignUuid('quote_request_id')->constrained()->onDelete('cascade');
-            $table->foreignUuid('product_id')->nullable()->constrained('products')->onDelete('set null');
-            $table->integer('quantity')->default(1);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('quote_request_items')) {
+            Schema::create('quote_request_items', function (Blueprint $table) {
+                $table->id();
+                $table->foreignUuid('quote_request_id')->constrained()->onDelete('cascade');
+                $table->foreignUuid('product_id')->nullable()->constrained('products')->onDelete('set null');
+                $table->integer('quantity')->default(1);
+                $table->timestamps();
+            });
+        }
     }
 
     /**

@@ -10,11 +10,11 @@ class SettingSeeder extends Seeder
     public function run()
     {
         $defaults = [
-            // General
-            ['key' => 'company_name', 'value' => 'Louis Marine Qatar', 'group' => 'general'],
-            ['key' => 'company_address', 'value' => 'Doha, Qatar', 'group' => 'general'],
-            ['key' => 'vat_number', 'value' => '', 'group' => 'general'],
-            ['key' => 'company_logo', 'value' => '', 'group' => 'general'],
+            // General / Company
+            ['key' => 'company_name', 'value' => 'Louis Marine Qatar', 'group' => 'company'],
+            ['key' => 'company_address', 'value' => 'Doha, Qatar', 'group' => 'company'],
+            ['key' => 'vat_number', 'value' => '', 'group' => 'company'], // Moved to company group
+            ['key' => 'company_logo', 'value' => '', 'group' => 'branding'], // Logo is technically branding
             
             // Email (Empty by default, uses env)
             ['key' => 'mail_host', 'value' => '', 'group' => 'email'],

@@ -1,69 +1,66 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="theme-text-header">
-                {{ __('Job Details') }}: {{ $job->job_number }}
-            </h2>
-            <div class="flex items-center space-x-3">
-                @if($job->status !== 'Completed')
-                <a href="{{ route('engineer.jobs.report.create', $job->id) }}" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-900 focus:outline-none focus:border-green-900 focus:ring ring-green-300 disabled:opacity-25 transition ease-in-out duration-150">
-                    Create Service Report
-                </a>
-                @endif
-                @if($job->activeReport)
-                <a href="{{ route('engineer.jobs.report.store', $job->id) }}" class="hidden"></a> 
-                
-                <!-- View Report -->
-                <a href="{{ route('engineer.reports.show', $job->activeReport->id) }}" 
-                   class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-md transition shadow-sm">
-                    View Report
-                </a>
-
-                <!-- Edit Report -->
-                @if($job->status === 'Completed') 
-                <a href="{{ route('engineer.reports.edit', $job->activeReport->id) }}" 
-                   class="inline-flex items-center px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium rounded-md transition shadow-sm">
-                    Edit Report
-                </a>
-                @endif
-
-                <!-- Download -->
-                <a href="{{ route('engineer.reports.download', $job->activeReport->id) }}" 
-                   target="_blank"
-                   class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md transition shadow-sm">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    Download
-                </a>
-                @endif
-                
-                @if($job->job_type === 'Workshop Service' && $job->delivery_note_number)
-                <a href="{{ route('engineer.jobs.delivery-note', $job->id) }}" 
-                   target="_blank"
-                   class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-                    </svg>
-                    Print Delivery Note
-                </a>
-                @endif
-                
-                <!-- Edit Job Button -->
-                <a href="{{ route('admin.jobs.edit', $job->id) }}" 
-                   class="inline-flex items-center px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-md transition shadow-sm">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                    </svg>
-                    Edit Job
-                </a>
-                
-                <!-- Status Badge -->
-                <span class="px-3 py-1 text-sm font-semibold rounded-full 
-                    @if($job->status === 'Completed') bg-green-100 text-green-800 
-                    @elseif($job->status === 'In Progress') bg-blue-100 text-blue-800 
-                    @elseif($job->status === 'Cancelled') bg-red-100 text-red-800 
-                    @else bg-yellow-100 text-yellow-800 @endif">
-                    {{ $job->status }}
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <h2 class="font-black text-2xl text-slate-900 dark:text-white leading-tight tracking-tight">
+                    View Job: {{ $job->job_number }}
+                </h2>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold
+                    {{ $job->status === 'completed' || $job->status === 'Completed' ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800/60' : '' }}
+                    {{ $job->status === 'in-progress' || $job->status === 'In Progress' ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60' : '' }}
+                    {{ $job->status === 'requested' || $job->status === 'Requested' ? 'bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-800/60' : '' }}
+                    {{ $job->status === 'overdue' || $job->status === 'Overdue' ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800/60' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700' }}">
+                    <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                    {{ ucfirst($job->status) }}
                 </span>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ route('engineer.jobs.pdf', $job->id) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-500/20 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    <span>View PDF</span>
+                </a>
+
+                <a href="{{ route('engineer.jobs.pdf', [$job->id, 'download' => 1]) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold text-xs rounded-xl shadow-xs transition-all">
+                    <svg class="w-4 h-4 text-brand-500 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>Download PDF</span>
+                </a>
+
+                @if($job->status !== 'Completed' && $job->status !== 'completed')
+                    <a href="{{ route('engineer.jobs.report.create', $job->id) }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-md shadow-emerald-500/20 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <span>CREATE SERVICE REPORT</span>
+                    </a>
+                @endif
+
+                @if($job->activeReport)
+                    <a href="{{ route('engineer.reports.show', $job->activeReport->id) }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl shadow-xs border border-slate-700 transition-all">
+                        <span>View Report</span>
+                    </a>
+
+                    @if($job->status === 'Completed' || $job->status === 'completed') 
+                        <a href="{{ route('engineer.reports.edit', $job->activeReport->id) }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl shadow-xs transition-all">
+                            <span>Edit Report</span>
+                        </a>
+                    @endif
+
+                    <a href="{{ route('engineer.reports.download', $job->activeReport->id) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl shadow-xs transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <span>Report PDF</span>
+                    </a>
+                @endif
+
+                @if($job->job_type === 'Workshop Service' && $job->delivery_note_number)
+                    <a href="{{ route('engineer.jobs.delivery-note', $job->id) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs rounded-xl shadow-xs transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                        <span>Delivery Note</span>
+                    </a>
+                @endif
+
+                <a href="{{ route('admin.jobs.edit', $job->id) }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-600/10 hover:bg-amber-600 text-amber-600 dark:text-amber-400 hover:text-white border border-amber-500/30 font-bold text-xs rounded-xl shadow-xs transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    <span>Edit Job</span>
+                </a>
             </div>
         </div>
     </x-slot>
@@ -163,7 +160,7 @@
                                 </div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $assignment->user->name }}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ ucfirst($assignment->user->roles->first()->name ?? 'Staff') }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ ucfirst($assignment->user?->roles?->first()?->name ?? 'Staff') }}</p>
                                 </div>
                             </div>
                         </li>

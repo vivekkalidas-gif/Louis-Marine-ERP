@@ -136,7 +136,7 @@
                     <!-- Submit Buttons -->
                     <div class="flex justify-end space-x-3 pt-6 border-t">
                         <a href="{{ route('admin.certificates.index') }}" 
-                           class="px-6 py-2 bg-gray-50 dark:bg-gray-7000 hover:bg-gray-600 text-white rounded-md transition">
+                           class="px-6 py-2 bg-gray-50 dark:bg-gray-700 hover:bg-gray-600 text-white rounded-md transition">
                             Cancel
                         </a>
                         <button type="submit" 

@@ -37,7 +37,17 @@ class EquipmentCategory extends Model
         return $this->hasMany(EquipmentItem::class, 'category_id');
     }
 
+    public function certificateTemplates()
+    {
+        return $this->hasMany(CertificateTemplate::class, 'equipment_category_id');
+    }
+
     public function templates()
+    {
+        return $this->hasMany(CertificateTemplate::class, 'equipment_category_id');
+    }
+
+    public function itemTemplates()
     {
         return $this->hasMany(EquipmentItem::class, 'category_id')
             ->where('record_type', 'template');

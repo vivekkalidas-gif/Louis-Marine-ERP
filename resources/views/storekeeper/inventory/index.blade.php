@@ -5,7 +5,7 @@
                 {{ __('Inventory Master') }}
             </h2>
             <div class="flex gap-2">
-                <a href="{{ route('storekeeper.inventory.import') }}" class="bg-gray-50 dark:bg-gray-7000 text-white px-3 py-2 rounded-md text-sm hover:bg-gray-600">Import</a>
+                <a href="{{ route('storekeeper.inventory.import') }}" class="bg-gray-600 dark:bg-gray-700 text-white px-3 py-2 rounded-md text-sm hover:bg-gray-700">Import</a>
                 <a href="{{ route('storekeeper.inventory.export') }}" class="bg-green-600 text-white px-3 py-2 rounded-md text-sm hover:bg-green-700">Export CSV</a>
                 <a href="{{ route('storekeeper.inventory.pdf') }}" class="bg-red-600 text-white px-3 py-2 rounded-md text-sm hover:bg-red-700">Download PDF</a>
                 <a href="{{ route('storekeeper.inventory.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700">Add New Item</a>

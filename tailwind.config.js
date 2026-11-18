@@ -9,31 +9,50 @@ export default {
         './resources/views/**/*.blade.php',
     ],
 
-    darkMode: 'class', // Enable class-based dark mode
+    darkMode: 'class',
 
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Inter', 'Figtree', ...defaultTheme.fontFamily.sans],
             },
             colors: {
                 marine: {
-                    50: '#f4f6f8',
-                    100: '#e3e8ee',
-                    200: '#c5cedb',
-                    300: '#9baabf',
-                    400: '#6f85a0',
-                    500: '#4d6582',
-                    600: '#394e68',
-                    700: '#2b3a4f',
-                    800: '#1e293b', // Slate 800 - Sidebar Dark
-                    900: '#0f172a', // Slate 900 - Deepest Navy
-                    950: '#020617', // Nearly Black
+                    50: '#f8fafc',
+                    100: '#f1f5f9',
+                    200: '#e2e8f0',
+                    300: '#cbd5e1',
+                    400: '#94a3b8',
+                    500: '#64748b',
+                    600: '#475569',
+                    700: '#334155',
+                    800: '#1e293b', // Primary Dark Card/Sidebar
+                    900: '#0f172a', // Deep Body Dark Background
+                    950: '#020617', // Pitch Dark Accents
+                },
+                brand: {
+                    50: '#eff6ff',
+                    100: '#dbeafe',
+                    200: '#bfdbfe',
+                    300: '#93c5fd',
+                    400: '#60a5fa',
+                    500: '#3b82f6',
+                    600: '#2563eb', // Primary Accent
+                    700: '#1d4ed8',
+                    800: '#1e40af',
+                    900: '#1e3a8a',
+                    950: '#0c245c',
                 },
                 accent: {
-                    DEFAULT: '#2563eb', // Blue 600 - Professional accent
-                    hover: '#1d4ed8',   // Blue 700
+                    DEFAULT: '#2563eb',
+                    hover: '#1d4ed8',
                 },
+            },
+            boxShadow: {
+                'card-light': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
+                'card-dark': '0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.2)',
+                'glass-light': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                'glass-dark': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
             },
         },
     },

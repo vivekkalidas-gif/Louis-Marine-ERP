@@ -11,15 +11,26 @@ class ChatController extends Controller
 {
     public function users()
     {
-        // Get all users except current user with unread message count
-        $users = User::where('id', '!=', Auth::id())
-            ->withCount(['sentMessages as unread_count' => function($query) {
-                $query->where('receiver_id', Auth::id())
-                      ->where('is_read', false);
-            }])
-            ->get(['id', 'name', 'email']);
+        try {
+            $currentUserId = Auth::id();
+            if (!$currentUserId) {
+                return response()->json(['error' => 'Unauthenticated'], 401);
+            }
 
-        return response()->json($users);
+            // Get all users except current user with unread message count
+            $users = User::where('id', '!=', $currentUserId)
+                ->withCount(['sentMessages as unread_count' => function($query) use ($currentUserId) {
+                    $query->where('receiver_id', $currentUserId)
+                        ->where('is_read', false);
+                }])
+                ->get(['id', 'name', 'email']);
+
+            return response()->json($users);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Chat Users Fetch Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to load users'], 500);
+        }
     }
 
     public function messages($userId)

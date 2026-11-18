@@ -7,7 +7,7 @@ return [
          * The name of this application. You can use this name to monitor
          * the backups.
          */
-        'name' => env('APP_NAME', 'laravel-backup'),
+        'name' => \Illuminate\Support\Str::slug(env('APP_NAME', 'laravel-backup')),
 
         'source' => [
             'files' => [
@@ -26,6 +26,9 @@ return [
                 'exclude' => [
                     base_path('vendor'),
                     base_path('node_modules'),
+                    storage_path('app/private'), // Exclude local backups
+                    storage_path('logs'),        // Exclude logs
+                    storage_path('framework'),   // Exclude cache, sessions, views
                 ],
 
                 /*

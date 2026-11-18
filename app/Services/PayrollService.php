@@ -76,10 +76,13 @@ class PayrollService
             ->where('status', 'approved')
             ->sum('hours');
             
+        
         $otAmount = $otHours * $detail->hourly_rate;
         
-        // Deductions (Placeholder logic - can be expanded)
-        $deductions = 0; 
+        // Deductions
+        $deductions = \App\Models\PayrollDeduction::where('user_id', $user->id)
+            ->where('month', $month)
+            ->sum('amount');
         
         $gross = $basic + $allowances + $otAmount;
         $net = $gross - $deductions;

@@ -65,15 +65,21 @@ class User extends Authenticatable
     public function hasRole($role)
     {
         if (is_string($role)) {
-            return $this->roles->contains('slug', $role);
+            if ($this->relationLoaded('roles')) {
+                return $this->roles->contains('slug', $role);
+            }
+            return $this->roles()->where('slug', $role)->exists();
         }
         
-        // Convert array to collection if needed
         if (is_array($role)) {
             $role = collect($role);
         }
         
-        return !! $role->intersect($this->roles->pluck('slug'))->count();
+        if ($this->relationLoaded('roles')) {
+            return !! $role->intersect($this->roles->pluck('slug'))->count();
+        }
+        
+        return $this->roles()->whereIn('slug', $role)->exists();
     }
 
     /**
@@ -81,24 +87,23 @@ class User extends Authenticatable
      */
     public function hasPermissionTo($permissionSlug)
     {
-        // Super Admin Bypass is handled in AppServiceProvider Gate::before, 
-        // but for direct method calls it's good to confirm here too if Gate isn't used.
-        // However, standardizing on Gate::check() is better. 
-        // For this method, we check the actual assignments.
-        
-        // 1. Check if ANY of the user's roles has the permission
-        // We iterate through roles and their permissions.
-        // To avoid N+1, accessing $this->roles should have them loaded, 
-        // or we use a more optimized query if needed. 
-        // For current scale, eager loading 'permissions' on roles or simple iteration is fine.
-        
-        foreach ($this->roles as $role) {
-            if ($role->permissions->contains('slug', $permissionSlug)) {
-                return true;
+        if ($this->hasRole('super-admin') || $this->hasRole('admin')) {
+            return true;
+        }
+
+        if ($this->relationLoaded('roles')) {
+            foreach ($this->roles as $role) {
+                if ($role->relationLoaded('permissions')) {
+                    if ($role->permissions->contains('slug', $permissionSlug)) {
+                        return true;
+                    }
+                }
             }
         }
-        
-        return false;
+
+        return $this->roles()->whereHas('permissions', function ($q) use ($permissionSlug) {
+            $q->where('slug', $permissionSlug);
+        })->exists();
     }
 
     /**

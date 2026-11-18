@@ -36,24 +36,11 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // 3. Delivery Notes
-        Schema::create('delivery_notes', function (Blueprint $table) {
-            $table->id();
-            $table->string('reference_no')->unique(); // MDN-2025-XXXX
-            $table->foreignUuid('service_job_id')->constrained()->onDelete('cascade');
-            $table->foreignUuid('created_by')->constrained('users');
-            $table->string('receiver_name')->nullable();
-            $table->string('receiver_contact')->nullable();
-            $table->string('signature_path')->nullable();
-            $table->json('items')->nullable(); // Snapshot of items delivered
-            $table->date('delivery_date')->nullable();
-            $table->timestamps();
-        });
+
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('delivery_notes');
         Schema::dropIfExists('material_requests');
         Schema::dropIfExists('job_assignments');
     }

@@ -84,7 +84,7 @@
                     </div>
 
                     <div class="flex justify-end space-x-3">
-                        <a href="{{ route('engineer.jobs.show', $job->id) }}" class="bg-gray-50 dark:bg-gray-7000 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded">
+                        <a href="{{ route('engineer.jobs.show', $job->id) }}" class="bg-gray-600 dark:bg-gray-700 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded">
                             Cancel
                         </a>
                         <button type="submit" class="bg-marine-700 hover:bg-marine-600 text-white font-bold py-2 px-6 rounded">

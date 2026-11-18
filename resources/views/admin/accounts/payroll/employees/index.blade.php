@@ -20,7 +20,12 @@
 
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
-                    <p class="mb-4 text-sm text-gray-500 dark:text-gray-400">Manage salary structures for Engineers, Technicians, and Staff.</p>
+                    <div class="flex justify-between items-center mb-4">
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Manage salary structures for Engineers, Technicians, and Staff.</p>
+                        <a href="{{ route('admin.finance.payroll.index') }}" class="px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700">
+                            Go to Payroll Generator &rarr;
+                        </a>
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead>
@@ -64,7 +69,7 @@
                                         <!-- Edit Modal -->
                                         <div x-show="editOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
                                             <div class="flex items-center justify-center min-h-screen px-4 text-center">
-                                                <div class="fixed inset-0 transition-opacity bg-gray-50 dark:bg-gray-7000 bg-opacity-75" @click="editOpen = false"></div>
+                                                <div class="fixed inset-0 transition-opacity bg-gray-50 dark:bg-gray-700 bg-opacity-75" @click="editOpen = false"></div>
                                                 <div class="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 shadow-xl rounded-2xl">
                                                     <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">Payroll Details: {{ $employee->name }}</h3>
                                                     <form action="{{ route('admin.finance.payroll.employees.update', $employee) }}" method="POST" class="mt-4">

@@ -29,7 +29,7 @@
                              <select name="vessel_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 leading-tight focus:outline-none focus:shadow-outline">
                                 <option value="">No Specific Vessel</option>
                                 {{-- Optimally this should be filtered by JS based on Customer --}}
-                                @foreach(\App\Models\Vessel::all() as $vessel)
+                                @foreach($vessels as $vessel)
                                      <option value="{{ $vessel->id }}">{{ $vessel->name }} ({{ $vessel->customer->company_name ?? 'Unlinked' }})</option>
                                 @endforeach
                             </select>

@@ -29,6 +29,7 @@ class Certificate extends Model
         'assigned_verifier_id',
         'verified_at',
         'approved_by',
+        'verification_notes',
     ];
 
     protected $casts = [
@@ -80,6 +81,11 @@ class Certificate extends Model
     public function verifiedBy()
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    public function verifier()
+    {
+        return $this->belongsTo(User::class, 'assigned_verifier_id');
     }
 
     // Alias for service job relationship

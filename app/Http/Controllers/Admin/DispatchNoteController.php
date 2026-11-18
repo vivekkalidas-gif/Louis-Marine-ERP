@@ -140,6 +140,13 @@ class DispatchNoteController extends Controller
         return redirect()->route('admin.dispatch.index')->with('success', 'Dispatch Note updated successfully.');
     }
 
+    public function pdf(\App\Models\DispatchNote $dispatchNote)
+    {
+        $dispatchNote->load(['items', 'creator', 'serviceJob.vessel', 'serviceJob.customer']);
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.dispatch.pdf', compact('dispatchNote'));
+        return $pdf->download('Dispatch-Note-' . $dispatchNote->dispatch_number . '.pdf');
+    }
+
     public function destroy(\App\Models\DispatchNote $dispatchNote)
     {
         $dispatchNote->delete();

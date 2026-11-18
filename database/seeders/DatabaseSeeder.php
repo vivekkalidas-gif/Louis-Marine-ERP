@@ -27,6 +27,11 @@ class DatabaseSeeder extends Seeder
             SampleCertificateSeeder::class,   // Sample certificates
             MarineInventorySeeder::class,     // Added Inventory Seeder
             DemoDataSeeder::class,            // Added Demo Data Seeder (Comprehensive)
+            
+            // Refinement Seeders (Run last to ensure overrides/fixes)
+            ManagerRefinementSeeder::class,
+            SuperAdminRefinementSeeder::class,
+            EngineerRefinementSeeder::class, 
         ]);
     }
 }

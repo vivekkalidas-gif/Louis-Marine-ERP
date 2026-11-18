@@ -5,7 +5,7 @@
                 {{ __('Inventory Categories') }}
             </h2>
             <div class="flex gap-2">
-                <a href="{{ route('storekeeper.categories.import') }}" class="bg-gray-50 dark:bg-gray-7000 text-white px-3 py-2 rounded-md text-sm hover:bg-gray-600">Import</a>
+                <a href="{{ route('storekeeper.categories.import') }}" class="bg-gray-600 dark:bg-gray-700 text-white px-3 py-2 rounded-md text-sm hover:bg-gray-700">Import</a>
                 <a href="{{ route('storekeeper.categories.export') }}" class="bg-green-600 text-white px-3 py-2 rounded-md text-sm hover:bg-green-700">Export CSV</a>
                 <a href="{{ route('storekeeper.categories.pdf') }}" class="bg-red-600 text-white px-3 py-2 rounded-md text-sm hover:bg-red-700">Download PDF</a>
                 <a href="{{ route('storekeeper.categories.create') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">

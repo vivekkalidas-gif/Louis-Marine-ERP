@@ -31,4 +31,14 @@ class MaterialRequest extends Model
     {
         return $this->belongsTo(InventoryItem::class, 'inventory_item_id');
     }
+
+    public function getNameAttribute()
+    {
+        return $this->attributes['item_name'] ?? null;
+    }
+
+    public function getQtyAttribute()
+    {
+        return $this->attributes['quantity'] ?? null;
+    }
 }

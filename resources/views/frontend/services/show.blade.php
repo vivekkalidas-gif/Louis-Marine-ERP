@@ -17,7 +17,7 @@
                 <!-- Main Content -->
                 <div class="lg:col-span-2">
                     @if($service->image_path)
-                        <img src="{{ $service->image_path }}" alt="{{ $service->title }}" class="w-full h-auto rounded-xl shadow-lg mb-8 object-cover max-h-[500px]">
+                        <img src="{{ url('storage/' . $service->image_path) }}" alt="{{ $service->title }}" class="w-full h-auto rounded-xl shadow-lg mb-8 object-cover max-h-[500px]">
                     @endif
 
                     <div class="prose prose-lg max-w-none text-gray-700 dark:text-gray-300">

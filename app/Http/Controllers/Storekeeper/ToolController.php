@@ -123,18 +123,31 @@ class ToolController extends Controller
 
     public function requests()
     {
-        $pending = ToolRequest::with(['requester', 'tool'])
-            ->pending()
+        $requests = ToolRequest::with(['requester', 'tool'])
+            ->whereIn('status', [ToolRequest::STATUS_PENDING, ToolRequest::STATUS_APPROVED])
             ->orderBy('requested_at', 'asc')
             ->get();
             
-        return view('storekeeper.tools.requests', compact('pending'));
+        return view('storekeeper.tools.requests', compact('requests'));
+    }
+
+    public function approve(Request $request, ToolRequest $toolRequest)
+    {
+        if ($toolRequest->status !== ToolRequest::STATUS_PENDING) {
+            return back()->with('error', 'Request is not pending.');
+        }
+        
+        $toolRequest->update([
+            'status' => ToolRequest::STATUS_APPROVED,
+        ]);
+
+        return back()->with('success', 'Request approved. Ready to issue.');
     }
 
     public function issue(Request $request, ToolRequest $toolRequest)
     {
-        if ($toolRequest->status !== ToolRequest::STATUS_PENDING) {
-            return back()->with('error', 'Request is not pending.');
+        if ($toolRequest->status !== ToolRequest::STATUS_APPROVED) {
+            return back()->with('error', 'Request must be approved before issuing.');
         }
         
         // Check if item is already issued to someone else (concurrency check)

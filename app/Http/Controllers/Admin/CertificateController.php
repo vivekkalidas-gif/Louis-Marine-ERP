@@ -86,7 +86,49 @@ class CertificateController extends Controller
             $q->where('slug', 'engineer');
         })->get();
         
-        return view('admin.certificates.create', compact('jobs', 'types', 'equipmentCategories', 'selectedJob', 'autoFillData', 'template', 'engineers'));
+        [$customers, $vessels] = $this->jobDetailOptions();
+
+        return view('admin.certificates.create', compact('jobs', 'types', 'equipmentCategories', 'selectedJob', 'autoFillData', 'template', 'engineers', 'customers', 'vessels'));
+    }
+
+    /**
+     * Customers and vessels for the manual job-details step.
+     */
+    private function jobDetailOptions(): array
+    {
+        return [
+            Customer::orderBy('company_name')->get(['id', 'company_name']),
+            Vessel::orderBy('name')->get(['id', 'name', 'customer_id']),
+        ];
+    }
+
+    /**
+     * Validation rules for the manually entered job details.
+     */
+    private function jobDetailRules(): array
+    {
+        return [
+            'job_number' => 'required|string|max:100',
+            'customer_id' => 'required|exists:customers,id',
+            'vessel_id' => 'nullable|exists:vessels,id',
+        ];
+    }
+
+    /**
+     * Certificate attributes from the manual job details. If a service job with the
+     * same number exists it is linked, but the typed number is always what is stored.
+     */
+    private function jobDetailAttributes(Request $request): array
+    {
+        $jobNumber = trim($request->job_number);
+        $job = ServiceJob::where('job_number', $jobNumber)->first();
+
+        return [
+            'service_job_id' => $job?->id,
+            'job_number' => $jobNumber,
+            'customer_id' => $request->customer_id,
+            'vessel_id' => $request->vessel_id ?: null,
+        ];
     }
 
     /**
@@ -117,8 +159,7 @@ class CertificateController extends Controller
     public function store(Request $request)
     {
         // 1. Basic Validation
-        $request->validate([
-            'service_job_id' => 'required|exists:service_jobs,id',
+        $request->validate($this->jobDetailRules() + [
             'equipment_category_id' => 'required|exists:equipment_categories,id',
             'template_id' => 'required|exists:certificate_templates,id',
             'issue_date' => 'required|date',
@@ -178,8 +219,8 @@ class CertificateController extends Controller
         $request->validate($rules);
 
         // 4. Create Certificate Record
-        $job = ServiceJob::findOrFail($request->service_job_id);
-        
+        $jobDetails = $this->jobDetailAttributes($request);
+
         // Generate number
         $category = \App\Models\EquipmentCategory::find($request->equipment_category_id);
         // Use Str::slug to converting 'CO₂' -> 'co2' and strip special chars
@@ -191,19 +232,11 @@ class CertificateController extends Controller
 
         DB::beginTransaction();
         try {
-            $certificate = Certificate::create([
+            $certificate = Certificate::create($jobDetails + [
                 'certificate_number' => $certNumber,
-                'service_job_id' => $request->service_job_id,
+                'certificate_type_id' => $request->certificate_type_id,
                 'equipment_category_id' => $request->equipment_category_id,
                 'certificate_template_id' => $template->id,
-                'customer_id' => $job->customer_id,
-                'vessel_id' => $job->vessel_id,
-                'job_number' => $job->job_number,
-                'issue_date' => $request->issue_date,
-                'expiry_date' => $request->expiry_date,
-                'remarks' => $request->remarks,
-                'created_by' => auth()->id(),
-                'issued_by' => auth()->id(),
                 'issue_date' => $request->issue_date,
                 'expiry_date' => $request->expiry_date,
                 'remarks' => $request->remarks,
@@ -277,13 +310,18 @@ class CertificateController extends Controller
         ]);
         
         $jobs = ServiceJob::with(['customer', 'vessel'])->latest()->get();
-        $equipmentCategories = EquipmentCategory::all();
-        $types = CertificateType::all();
+        $categories = EquipmentCategory::all();
+        $equipmentCategories = $categories;
+        $certificateTypes = CertificateType::all();
+        $types = $certificateTypes;
+        $templates = CertificateTemplate::with('sections.fields')->where('is_active', true)->get();
         $engineers = \App\Models\User::whereHas('roles', function($q) {
             $q->where('slug', 'engineer');
         })->get();
         
-        return view('admin.certificates.edit', compact('certificate', 'jobs', 'equipmentCategories', 'types', 'engineers'));
+        [$customers, $vessels] = $this->jobDetailOptions();
+
+        return view('admin.certificates.edit', compact('certificate', 'jobs', 'categories', 'equipmentCategories', 'certificateTypes', 'types', 'templates', 'engineers', 'customers', 'vessels'));
     }
 
     public function update(Request $request, Certificate $certificate)
@@ -296,8 +334,7 @@ class CertificateController extends Controller
         }
 
         // Build validation rules dynamically
-        $rules = [
-            'service_job_id' => 'required|exists:service_jobs,id',
+        $rules = $this->jobDetailRules() + [
             'equipment_category_id' => 'required|exists:equipment_categories,id',
             'issue_date' => 'required|date',
             'expiry_date' => 'nullable|date|after:issue_date',
@@ -328,17 +365,11 @@ class CertificateController extends Controller
         $request->validate($rules);
 
         // Update certificate basic data
-        $job = ServiceJob::findOrFail($request->service_job_id);
-        
         // Check if verifier changed
         $oldVerifierId = $certificate->assigned_verifier_id;
-        
-        $certificate->update([
-            'service_job_id' => $request->service_job_id,
+
+        $certificate->update($this->jobDetailAttributes($request) + [
             'equipment_category_id' => $request->equipment_category_id,
-            'customer_id' => $job->customer_id,
-            'vessel_id' => $job->vessel_id,
-            'job_number' => $job->job_number,
             'issue_date' => $request->issue_date,
             'expiry_date' => $request->expiry_date,
             'assigned_verifier_id' => $request->assigned_verifier_id,
@@ -504,7 +535,16 @@ class CertificateController extends Controller
     public function renew(Certificate $certificate)
     {
         $this->authorize('create', Certificate::class);
-        // Replicate the certificate with basic fields
+
+        $year = date('Y');
+        $lastCert = Certificate::whereYear('created_at', $year)->latest()->first();
+        $seq = $lastCert ? (intval(substr($lastCert->certificate_number ?? '0000', -4)) + 1) : 1;
+        $seqStr = str_pad($seq, 4, '0', STR_PAD_LEFT);
+        
+        $catCode = strtoupper(Str::limit($certificate->equipmentCategory?->name ?? 'CERT', 3, ''));
+        $newCertNumber = "LMQ-{$year}-{$catCode}-{$seqStr}";
+
+        // Replicate certificate preserving all relationships & parameters
         $newCertificate = $certificate->replicate([
             'certificate_number', 
             'issue_date', 
@@ -517,18 +557,21 @@ class CertificateController extends Controller
             'created_by'
         ]);
 
+        $newCertificate->certificate_number = $newCertNumber;
+        $newCertificate->issue_date = now();
+        $newCertificate->expiry_date = now()->addYear();
         $newCertificate->status = 'DRAFT';
         $newCertificate->created_by = auth()->id();
         $newCertificate->save();
 
-        // Replicate Field Values
+        // Replicate all field values (equipment specs, serial numbers, pressures, test results)
         foreach ($certificate->fieldValues as $fieldValue) {
             $newFieldValue = $fieldValue->replicate(['certificate_id']);
             $newFieldValue->certificate_id = $newCertificate->id;
             $newFieldValue->save();
         }
 
-        // Replicate Certificate Items if any (though usually fields handle this, check relationships)
+        // Replicate all certificate items (repeatable cylinder schedule items)
         foreach ($certificate->items as $item) {
              $newItem = $item->replicate(['certificate_id']);
              $newItem->certificate_id = $newCertificate->id;
@@ -536,7 +579,7 @@ class CertificateController extends Controller
         }
 
         return redirect()->route('admin.certificates.edit', $newCertificate)
-            ->with('success', 'Certificate renewed successfully. Please review and update details.');
+            ->with('success', "Certificate #{$newCertificate->certificate_number} renewed! All inspection values, equipment parameters, and serial numbers have been pre-loaded below for verification. Edit any details if needed and click Update & Save Certificate.");
     }
 
     public function verifyPublic($number)
@@ -552,13 +595,12 @@ class CertificateController extends Controller
     public function pdf(Certificate $certificate)
     {
         $this->authorize('view', $certificate);
-        if($certificate->status !== 'ISSUED') {
-            return back()->with('error', 'Certificate must be ISSUED to generate PDF.');
-        }
 
         $certificate->load(['type', 'customer', 'vessel', 'job', 'creator', 'approver', 'equipmentCategory', 'items', 'certificateTemplate.sections.fields', 'fieldValues.definition', 'issuedBy', 'assignedVerifier']);
 
-        $qrUrl = route('certificates.verify-public', $certificate->certificate_number);
+        $certNum = $certificate->certificate_number ?? ($certificate->job_number ? 'PREVIEW-' . $certificate->job_number : 'CERT-' . $certificate->id);
+        $qrUrl = route('certificates.verify-public', $certNum);
+        
         // Use a reliable QR API for now
         $qrImage = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($qrUrl);
         $qrCodeBase64 = null;
@@ -569,56 +611,57 @@ class CertificateController extends Controller
         }
 
         // ------------------------------------------------------------------------
-    // STRICT MULTI-PDF MERGE ARCHITECTURE (FAIL-SAFE)
-    // ------------------------------------------------------------------------
-    
-    // 1. Generate PDF A: Certificate Summary (Page 1 Sealed)
-    $pdfSummary = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.certificates.print_summary', compact('certificate', 'qrCodeBase64'));
-    $summaryPath = storage_path('app/temp_summary_' . $certificate->id . '.pdf');
-    $pdfSummary->save($summaryPath);
+        // STRICT MULTI-PDF MERGE ARCHITECTURE (FAIL-SAFE)
+        // ------------------------------------------------------------------------
+        
+        // 1. Generate PDF A: Certificate Summary (Page 1 Sealed)
+        $pdfSummary = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.certificates.print_summary', compact('certificate', 'qrCodeBase64'));
+        $summaryPath = storage_path('app/temp_summary_' . $certificate->id . '.pdf');
+        $pdfSummary->save($summaryPath);
 
-    // 2. Generate PDF B: Cylinder Details (Page 2+ Flowing)
-    $hasRepeatableSections = $certificate->certificateTemplate 
-        && $certificate->certificateTemplate->sections->where('is_repeatable', true)->count() > 0;
-    
-    $detailsPath = null;
-    
-    if ($hasRepeatableSections) {
-        $pdfDetails = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.certificates.print_details', compact('certificate'));
-        $detailsPath = storage_path('app/temp_details_' . $certificate->id . '.pdf');
-        $pdfDetails->save($detailsPath);
-    }
+        // 2. Generate PDF B: Cylinder Details (Page 2+ Flowing)
+        $hasRepeatableSections = $certificate->certificateTemplate 
+            && $certificate->certificateTemplate->sections->where('is_repeatable', true)->count() > 0;
+        
+        $detailsPath = null;
+        
+        if ($hasRepeatableSections) {
+            $pdfDetails = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.certificates.print_details', compact('certificate'));
+            $detailsPath = storage_path('app/temp_details_' . $certificate->id . '.pdf');
+            $pdfDetails->save($detailsPath);
+        }
 
-    // 3. Merge PDFs using FPDI
-    $pdf = new \setasign\Fpdi\Fpdi();
-    
-    // Import Summary (Page A)
-    // Summary is strictly 1 page
-    $pageCount = $pdf->setSourceFile($summaryPath);
-    for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-        $templateId = $pdf->importPage($pageNo);
-        $pdf->AddPage('P', 'A4'); // P = Portrait
-        $pdf->useTemplate($templateId);
-    }
-    
-    // Import Details (Page B+)
-    // Details can be multiple pages
-    if ($detailsPath && file_exists($detailsPath)) {
-        $pageCount = $pdf->setSourceFile($detailsPath);
+        // 3. Merge PDFs using FPDI
+        $pdf = new \setasign\Fpdi\Fpdi();
+        
+        // Import Summary (Page A)
+        // Summary is strictly 1 page
+        $pageCount = $pdf->setSourceFile($summaryPath);
         for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
             $templateId = $pdf->importPage($pageNo);
-            $pdf->AddPage('P', 'A4');
+            $pdf->AddPage('P', 'A4'); // P = Portrait
             $pdf->useTemplate($templateId);
         }
-    }
+        
+        // Import Details (Page B+)
+        // Details can be multiple pages
+        if ($detailsPath && file_exists($detailsPath)) {
+            $pageCount = $pdf->setSourceFile($detailsPath);
+            for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                $templateId = $pdf->importPage($pageNo);
+                $pdf->AddPage('P', 'A4');
+                $pdf->useTemplate($templateId);
+            }
+        }
 
-    // 4. Output and Clean Up
-    // Ensure temp files are deleted
-    if (file_exists($summaryPath)) unlink($summaryPath);
-    if ($detailsPath && file_exists($detailsPath)) unlink($detailsPath);
+        // 4. Output and Clean Up
+        if (file_exists($summaryPath)) unlink($summaryPath);
+        if ($detailsPath && file_exists($detailsPath)) unlink($detailsPath);
 
-    return response($pdf->Output('S'), 200)
-        ->header('Content-Type', 'application/pdf')
-        ->header('Content-Disposition', 'attachment; filename="' . $certificate->certificate_number . '.pdf"');
+        $downloadFilename = ($certificate->certificate_number ?? ('Certificate_' . $certificate->id)) . '.pdf';
+
+        return response($pdf->Output('S'), 200)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'attachment; filename="' . $downloadFilename . '"');
     }
 }
